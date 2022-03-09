@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include lifelong_erpnext *.css
+recursive-include lifelong_erpnext *.csv
+recursive-include lifelong_erpnext *.html
+recursive-include lifelong_erpnext *.ico
+recursive-include lifelong_erpnext *.js
+recursive-include lifelong_erpnext *.json
+recursive-include lifelong_erpnext *.md
+recursive-include lifelong_erpnext *.png
+recursive-include lifelong_erpnext *.py
+recursive-include lifelong_erpnext *.svg
+recursive-include lifelong_erpnext *.txt
+recursive-exclude lifelong_erpnext *.pyc
