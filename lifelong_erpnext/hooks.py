@@ -96,21 +96,21 @@ app_license = "MIT"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	"Putaway Rule": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_putaway_rule.CustomPutawayRule",
+    "Purchase Receipt": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockController",
+	"Stock Entry": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockEntry"
+}
 
 # Document Events
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+	"Stock Ledger Entry": {
+		"validate": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_ledger_entry.update_shelf_data",
+	}
+}
 
 # Scheduled Tasks
 # ---------------
@@ -141,9 +141,9 @@ app_license = "MIT"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "lifelong_erpnext.event.get_events"
-# }
+override_whitelisted_methods = {
+	"erpnext.stock.doctype.putaway_rule.putaway_rule.apply_putaway_rule": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_putaway_rule.apply_putaway_rule"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
