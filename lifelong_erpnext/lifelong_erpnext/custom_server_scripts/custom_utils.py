@@ -1,4 +1,6 @@
 import frappe
+from frappe.utils import nowdate, flt
+from lifelong_erpnext.lifelong_erpnext.report.shelf_wise_batch_balance_report.shelf_wise_batch_balance_report import execute
 
 def get_stock_balance(args, operator=None,
 	order="desc", limit=None, for_update=False, debug=False, check_serial_no=True):
@@ -46,3 +48,35 @@ def get_stock_balance(args, operator=None,
 		}, args, as_dict=1)
 
 	return entry[0].qty_after_transaction if entry else 0.0
+
+@frappe.whitelist()
+def get_available_batches(item_code, warehouse, company, qty=0, batch_no=None):
+	qty = flt(qty)
+
+	columns, data = execute(frappe._dict({
+		'item_code': item_code,
+		'warehouse': warehouse,
+		'company': company,
+		'from_date': nowdate(),
+		'to_date': nowdate(),
+		'batch_no': batch_no
+	}))
+
+	if not qty:
+		return data
+
+	new_data = []
+	for row in data:
+		if qty <= 0:
+			break
+
+		if row.bal_qty > qty:
+			row.selected_qty = qty
+			new_data.append(row)
+			break
+		else:
+			qty -= row.bal_qty
+			row.selected_qty = row.bal_qty
+			new_data.append(row)
+
+	return new_data

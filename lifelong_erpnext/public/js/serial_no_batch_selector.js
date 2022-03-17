@@ -87,19 +87,10 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 				label: __(me.warehouse_details.type),
 				default: typeof me.warehouse_details.name == "string" ? me.warehouse_details.name : '',
 				onchange: function(e) {
-					me.warehouse_details.name = this.get_value();
-
 					if(me.has_batch && !me.has_serial_no) {
-						fields = fields.concat(me.get_batch_fields());
+						me.get_available_batches();
 					} else {
 						fields = fields.concat(me.get_serial_no_fields());
-					}
-
-					var batches = this.layout.fields_dict.batches;
-					if(batches) {
-						batches.grid.df.data = [];
-						batches.grid.refresh();
-						batches.grid.add_new_row(null, null, null);
 					}
 				},
 				get_query: function() {
@@ -117,8 +108,13 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 			{
 				fieldname: 'qty',
 				fieldtype:'Float',
-				label: __(me.has_batch && !me.has_serial_no ? 'Select Qty' : 'Qty'),
-				default: flt(me.item.stock_qty),
+				label: __('Qty'),
+                default: flt(me.item.stock_qty),
+                onchange: function(e) {
+					if(me.has_batch && !me.has_serial_no) {
+						me.get_available_batches();
+					}
+				},
 			},
 			...get_pending_qty_fields(me),
 			{
@@ -263,6 +259,42 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 			}
 			return true;
 		}
+    }
+
+    get_available_batches() {
+		let me = this;
+		let dialog_data = this.dialog.get_values();
+		this.warehouse_details.name = dialog_data['warehouse'];
+
+        debugger
+		if (dialog_data['item_code'] && dialog_data['warehouse'] && dialog_data['qty'] > 0) {
+			frappe.call({
+				method: 'lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils.get_available_batches',
+				args: {
+					item_code: dialog_data['item_code'],
+					warehouse: dialog_data['warehouse'],
+                    company: me.frm.doc.company,
+                    qty: dialog_data['qty']
+				},
+				callback: function(r) {
+					me.batch_data = r.message || [];
+					me.dialog.fields_dict.batches.grid.df.data = [];
+					me.batch_data.forEach(data => {
+						if(data.item_code == me.item_code) {
+							me.dialog.fields_dict.batches.df.data.push({
+								'batch_no': data.batch_no,
+								'actual_qty': data.bal_qty,
+								'selected_qty': data.selected_qty,
+                                'available_qty': data.bal_qty,
+                                'shelf': data.shelf
+							});
+						}
+					});
+
+					me.dialog.fields_dict.batches.grid.refresh();
+				}
+			});
+		}
 	}
 
 	update_batch_items() {
@@ -280,7 +312,9 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 
 				if (!row) {
 					row = this.item;
-				}
+                }
+
+                row.shelf = batch.shelf;
 				// this ensures that qty & batch no is set
 				this.map_row_values(row, batch, 'batch_no',
 					'selected_qty', this.values.warehouse);
@@ -310,7 +344,9 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 					if (!acc[d['batch_no']]) acc[d['batch_no']] = [];
 					acc[d['batch_no']].push(d['name'])
 					return acc
-				}, {})
+                }, {})
+
+                debugger
 				// batch_serial_map = { "batch-1": ['SR-001'], "batch-2": ["SR-003", "SR-004"]}
 				Object.keys(batch_serial_map).map((batch_no, i) => {
 					let row = '';

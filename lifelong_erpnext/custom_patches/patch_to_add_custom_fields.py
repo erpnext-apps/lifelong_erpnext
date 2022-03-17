@@ -8,7 +8,7 @@ def execute():
 		label='Shelf', fieldtype='Link', options='Shelf')
 
 	for doctype in ['Putaway Rule', 'Stock Ledger Entry',
-		'Purchase Receipt Item', 'Stock Entry Detail', 'Delivery Note Item']:
+		'Purchase Receipt Item', 'Stock Entry Detail', 'Delivery Note Item', 'Pick List Item']:
 		create_custom_field(doctype, df)
 
 	create_custom_field('Putaway Rule',

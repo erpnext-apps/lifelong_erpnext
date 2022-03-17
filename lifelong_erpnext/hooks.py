@@ -99,7 +99,8 @@ app_include_js = "/assets/lifelong_erpnext/js/serial_no_batch_selector.js"
 override_doctype_class = {
 	"Putaway Rule": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_putaway_rule.CustomPutawayRule",
     "Purchase Receipt": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockController",
-	"Stock Entry": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockEntry"
+	"Stock Entry": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockEntry",
+	"Pick List": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_pick_list.CustomPickList"
 }
 
 # Document Events
