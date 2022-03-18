@@ -33,6 +33,3 @@ def update_shelf_data(doc, method):
 				this entry or select the different batch and shelf which has the sufficient stock.''')
 
 			frappe.throw(_(msg), title= _('Insufficient Stock Error'))
-
-	if doc.batch_no == 'Test Batch 1':
-		print(kwjeh)

@@ -31,7 +31,6 @@ app_include_js = "/assets/lifelong_erpnext/js/serial_no_batch_selector.js"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -111,6 +110,10 @@ doc_events = {
 	"Stock Ledger Entry": {
 		"validate": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_ledger_entry.update_shelf_data",
 	}
+}
+
+doctype_js = {
+	"Delivery Note" : "lifelong_erpnext/custom_client_scripts/custom_delivery_note.js"
 }
 
 # Scheduled Tasks

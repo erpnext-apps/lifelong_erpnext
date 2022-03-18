@@ -250,9 +250,7 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 			values.batches.map((batch, i) => {
 				total_selected_qty += batch.selected_qty
 				if(!batch.selected_qty || batch.selected_qty === 0 ) {
-					if (!this.show_dialog) {
-						frappe.throw(__("Please select quantity on row {0}", [i+1]));
-					}
+					frappe.throw(__("Please select quantity on row {0}", [i+1]));
 				}
 			});
 
@@ -512,11 +510,39 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 						'fieldname': 'shelf',
 						'label': __('Shelf'),
 						'in_list_view': 1,
-						'options': 'Shelf'
+						'options': 'Shelf',
+						change: function () {
+							let child_row = this.grid_row;
+							let doc = child_row.doc;
+							let parent_doc = me.dialog.get_values()
+							if (parent_doc.item_code && parent_doc.warehouse
+								&& me.frm.doc.company && doc.batch_no && doc.shelf) {
+									frappe.call({
+										method: 'lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils.get_available_batches',
+										args: {
+											item_code: parent_doc.item_code,
+											warehouse: parent_doc.warehouse,
+											company: me.frm.doc.company,
+											qty: 0,
+											batch_no: doc.batch_no,
+											shelf: doc.shelf
+										},
+										callback: function(r) {
+											if (r && r.message && r.message.length) {
+												r.message.forEach(row => {
+													me.update_shelf_qty(child_row, row.qty);
+												});
+											} else {
+												me.update_shelf_qty(child_row);
+											}
+										}
+									});
+								}
+						}
 					},
 					{
 						'fieldtype': 'Float',
-						'read_only': 0,
+						'read_only': 1,
 						'fieldname': 'selected_qty',
 						'label': __('Qty'),
 						'in_list_view': 1,
@@ -552,12 +578,17 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 				in_place_edit: true,
 				cannot_delete_rows: true,
 				cannot_add_rows: true,
-				data: this.data,
-				get_data: function () {
-					return this.data;
-				},
+				data: [],
 			}
 		];
+	}
+
+	update_shelf_qty(child_row, qty = 0) {
+		child_row.on_grid_fields_dict
+			.available_qty.set_value(qty);
+
+		child_row.on_grid_fields_dict
+			.selected_qty.set_value(qty);
 	}
 
 	get_serial_no_fields() {
