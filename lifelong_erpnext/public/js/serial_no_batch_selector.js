@@ -1,6 +1,6 @@
 erpnext.show_serial_batch_selector = function (frm, d, callback, on_close, show_dialog) {
     let warehouse, receiving_stock, existing_stock;
-    debugger
+
 	if (frm.doc.is_return) {
 		if (["Purchase Receipt", "Purchase Invoice"].includes(frm.doc.doctype)) {
 			existing_stock = true;
@@ -211,7 +211,9 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 							'batch_no': data.batch_no,
 							'actual_qty': data.actual_qty,
 							'selected_qty': data.qty,
-							'available_qty': data.actual_batch_qty
+							'available_qty': data.actual_shelf_batch_qty,
+							'shelf': data.shelf,
+							'row_name': data.name
 						});
 					}
 				});
@@ -243,13 +245,22 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 			if(values.batches.length === 0 || !values.batches) {
 				frappe.throw(__("Please select batches for batched item {0}", [values.item_code]));
 			}
+
+			let total_selected_qty = 0
 			values.batches.map((batch, i) => {
+				total_selected_qty += batch.selected_qty
 				if(!batch.selected_qty || batch.selected_qty === 0 ) {
 					if (!this.show_dialog) {
 						frappe.throw(__("Please select quantity on row {0}", [i+1]));
 					}
 				}
 			});
+
+			if (total_selected_qty != values.qty) {
+				frappe.throw(__("Total selected quantity {0} should be same as qty {1}",
+					[total_selected_qty, values.qty]));
+			}
+
 			return true;
 
 		} else {
@@ -257,6 +268,7 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 			if (!serial_nos || !serial_nos.replace(/\s/g, '').length) {
 				frappe.throw(__("Please enter serial numbers for serialized item {0}", [values.item_code]));
 			}
+
 			return true;
 		}
     }
@@ -266,7 +278,6 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 		let dialog_data = this.dialog.get_values();
 		this.warehouse_details.name = dialog_data['warehouse'];
 
-        debugger
 		if (dialog_data['item_code'] && dialog_data['warehouse'] && dialog_data['qty'] > 0) {
 			frappe.call({
 				method: 'lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils.get_available_batches',
@@ -307,13 +318,14 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 				if (i !== 0 && !this.batch_exists(batch_no)) {
 					row = this.frm.add_child("items", { ...this.item });
 				} else {
-					row = this.frm.doc.items.find(i => i.batch_no === batch_no);
+					row = this.frm.doc.items.find(i => i.batch_no === batch_no && i.name === batch.row_name);
 				}
 
 				if (!row) {
 					row = this.item;
                 }
 
+				row.actual_shelf_batch_qty = batch.available_qty
                 row.shelf = batch.shelf;
 				// this ensures that qty & batch no is set
 				this.map_row_values(row, batch, 'batch_no',
@@ -346,7 +358,6 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 					return acc
                 }, {})
 
-                debugger
 				// batch_serial_map = { "batch-1": ['SR-001'], "batch-2": ["SR-003", "SR-004"]}
 				Object.keys(batch_serial_map).map((batch_no, i) => {
 					let row = '';
@@ -531,8 +542,16 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 							me.update_pending_qtys();
 						}
 					},
+					{
+						'fieldtype': 'Data',
+						'hidden': 1,
+						'fieldname': 'row_name',
+						'label': __('Id')
+					},
 				],
 				in_place_edit: true,
+				cannot_delete_rows: true,
+				cannot_add_rows: true,
 				data: this.data,
 				get_data: function () {
 					return this.data;

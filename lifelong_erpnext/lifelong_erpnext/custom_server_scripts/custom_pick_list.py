@@ -5,6 +5,8 @@ from erpnext.stock.doctype.pick_list.pick_list import (PickList,
 	get_available_item_locations_for_serial_and_batched_item, get_available_item_locations_for_serialized_item,
 	get_available_item_locations_for_other_item)
 
+from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils import get_available_batches
+
 class CustomPickList(PickList):
 	@frappe.whitelist()
 	def set_item_locations(self, save=False):
@@ -80,35 +82,7 @@ def get_available_item_locations(item_code, from_warehouses, required_qty, compa
 	return locations
 
 def get_available_item_locations_for_batched_item(item_code, from_warehouses, required_qty, company):
-	warehouse_condition = 'and warehouse in %(warehouses)s' if from_warehouses else ''
-	batch_locations = frappe.db.sql("""
-		SELECT
-			sle.`warehouse`,
-			sle.`batch_no`,
-			sle.shelf,
-			SUM(sle.`actual_qty`) AS `qty`
-		FROM
-			`tabStock Ledger Entry` sle, `tabBatch` batch
-		WHERE
-			sle.batch_no = batch.name
-			and sle.`item_code`=%(item_code)s
-			and sle.`company` = %(company)s
-			and batch.disabled = 0
-			and sle.is_cancelled=0
-			and IFNULL(batch.`expiry_date`, '2200-01-01') > %(today)s
-			{warehouse_condition}
-		GROUP BY
-			`warehouse`,
-			`batch_no`,
-			`item_code`
-		HAVING `qty` > 0
-		ORDER BY IFNULL(batch.`expiry_date`, '2200-01-01'), batch.`creation`
-	""".format(warehouse_condition=warehouse_condition), { #nosec
-		'item_code': item_code,
-		'company': company,
-		'today': today(),
-		'warehouses': from_warehouses
-	}, as_dict=1)
+	batch_locations = get_available_batches(item_code, from_warehouses, company)
 
 	return batch_locations
 

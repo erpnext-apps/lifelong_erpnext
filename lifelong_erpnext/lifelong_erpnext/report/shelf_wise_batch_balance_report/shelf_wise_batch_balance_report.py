@@ -125,7 +125,7 @@ def get_conditions(filters):
 	else:
 		frappe.throw(_("'To Date' is required"))
 
-	for field in ["item_code", "warehouse", "batch_no", "company"]:
+	for field in ["item_code", "warehouse", "batch_no", "company", "shelf"]:
 		if filters.get(field):
 			conditions += " and {0} = {1}".format(field, frappe.db.escape(filters.get(field)))
 
@@ -145,10 +145,11 @@ def get_stock_ledger_entries(filters):
 		WHERE
 			sle.is_cancelled = 0 and sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' {conditions}
 			and batch.name = sle.batch_no and IFNULL(batch.`expiry_date`, '2200-01-01') > '{nowdate()}'
+			and sle.shelf is not null
 		GROUP BY
 			sle.voucher_no, sle.batch_no, sle.item_code, sle.warehouse, sle.shelf
 		ORDER BY
-			sle.item_code, sle.warehouse, batch.creation""", as_dict=1)
+			sle.item_code, sle.warehouse, batch.creation, qty""", as_dict=1)
 
 
 def get_item_warehouse_batch_map(filters, float_precision):
@@ -179,6 +180,7 @@ def get_item_warehouse_batch_map(filters, float_precision):
 					+ abs(flt(d.qty, float_precision))
 
 		qty_dict.bal_qty = flt(qty_dict.bal_qty, float_precision) + flt(d.qty, float_precision)
+		qty_dict.qty = qty_dict.bal_qty
 
 	return iwb_map
 

@@ -1,5 +1,5 @@
 import frappe
-from frappe.custom.doctype.custom_field.custom_field import create_custom_field
+from frappe.custom.doctype.custom_field.custom_field import create_custom_field, create_custom_fields
 
 def execute():
 	frappe.reload_doc('lifelong_erpnext', 'doctype', 'shelf')
@@ -19,3 +19,11 @@ def execute():
 		dict(fieldname='has_shelf', label='Has Shelf',
 			fieldtype='Check', insert_after='disabled'))
 
+	create_custom_fields({
+		"Delivery Note Item": [
+			dict(fieldname='edit_batch', label='Edit Batch',
+				fieldtype='Button', in_list_view=1, insert_after='shelf'),
+			dict(fieldname='actual_shelf_batch_qty', label='Actual Batch Qty',
+				fieldtype='Float', hidden=1, insert_after='edit_batch'),
+		]
+	})

@@ -71,6 +71,24 @@ frappe.query_reports["Shelf Wise Batch Balance Report"] = {
 				}
 			}
 		},
+		{
+			"fieldname":"shelf",
+			"label": __("Shelf"),
+			"fieldtype": "Link",
+			"options": "Shelf",
+			"get_query": function() {
+				let item_code = frappe.query_report.get_filter_value('item_code');
+				let warehouse = frappe.query_report.get_filter_value('warehouse');
+				let company = frappe.query_report.get_filter_value('company');
+				// if (item_code) {
+				// 	return {
+				// 		filters: {
+				// 			"item": item_code
+				// 		}
+				// 	};
+				// }
+			}
+		},
 	],
 	"formatter": function (value, row, column, data, default_formatter) {
 		if (column.fieldname == "Batch" && data && !!data["Batch"]) {
