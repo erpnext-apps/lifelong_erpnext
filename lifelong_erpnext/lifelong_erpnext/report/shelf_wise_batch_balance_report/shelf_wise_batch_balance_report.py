@@ -138,7 +138,7 @@ def get_stock_ledger_entries(filters):
 	return frappe.db.sql(f"""
 		SELECT
 			sle.item_code, sle.batch_no, sle.warehouse, sle.posting_date,
-			sum(sle.actual_qty) as qty, sle.shelf, batch.creation,
+			sum(sle.actual_qty) as qty, sle.shelf, DATE_FORMAT(batch.creation, '%Y-%m-%d %H:%i:%s') as creation,
 			batch.item_name, batch.description, batch.stock_uom
 		FROM
 			`tabStock Ledger Entry` sle, `tabBatch` batch
@@ -163,7 +163,7 @@ def get_item_warehouse_batch_map(filters, float_precision):
 		key = (d.item_code, d.warehouse, d.batch_no, d.shelf)
 
 		iwb_map.setdefault(key, frappe._dict({
-			"opening_qty": 0.0, "in_qty": 0.0, "out_qty": 0.0, "bal_qty": 0.0, "creation": d.creation,
+			"opening_qty": 0.0, "in_qty": 0.0, "out_qty": 0.0, "bal_qty": 0.0, "creation": get_datetime(d.creation),
 			"item_code": d.item_code, "warehouse": d.warehouse, "batch_no": d.batch_no, "shelf": d.shelf,
 			"item_name": d.item_name, "description": d.description, "stock_uom": d.stock_uom
 		}))
