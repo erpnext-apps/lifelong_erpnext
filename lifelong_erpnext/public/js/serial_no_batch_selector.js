@@ -309,11 +309,16 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 	update_batch_items() {
 		// clones an items if muliple batches are selected.
 		if(this.has_batch && !this.has_serial_no) {
+			if (this.frm.doc.items && this.frm.doc.items.length) {
+				let rows = this.frm.doc.items.filter(i => i.item_code !== this.item.item_code);
+				this.frm.doc.items = rows;
+			}
+
 			this.values.batches.map((batch, i) => {
 				let batch_no = batch.batch_no;
 				let row = '';
 
-				if (i !== 0 && !this.batch_exists(batch_no)) {
+				if (!this.batch_exists(batch_no)) {
 					row = this.frm.add_child("items", { ...this.item });
 				} else {
 					row = this.frm.doc.items.find(i => i.batch_no === batch_no && i.name === batch.row_name);
@@ -382,8 +387,10 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 	}
 
 	batch_exists(batch) {
-		const batches = this.frm.doc.items.map(data => data.batch_no);
-		return (batches && in_list(batches, batch)) ? true : false;
+		if (this.frm.doc.items && this.frm.doc.items.length) {
+			const batches = this.frm.doc.items.map(data => data.batch_no);
+			return (batches && batches.length && in_list(batches, batch)) ? true : false;
+		}
 	}
 
 	map_row_values(row, values, number, qty_field, warehouse) {
