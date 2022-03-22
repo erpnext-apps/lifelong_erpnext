@@ -53,6 +53,9 @@ def get_stock_balance(args, operator=None,
 def get_available_batches(item_code, warehouse, company, qty=0, batch_no=None, shelf=None):
 	qty = flt(qty)
 
+	if isinstance(warehouse, str):
+		warehouse = [warehouse]
+
 	columns, data = execute(frappe._dict({
 		'item_code': item_code,
 		'warehouse': warehouse,

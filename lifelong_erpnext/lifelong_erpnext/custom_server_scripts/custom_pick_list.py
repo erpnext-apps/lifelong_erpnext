@@ -1,4 +1,6 @@
 import frappe
+from frappe import _
+from collections import OrderedDict
 from frappe.utils import cint, floor, flt, today
 
 from erpnext.stock.doctype.pick_list.pick_list import (PickList,
@@ -55,6 +57,33 @@ class CustomPickList(PickList):
 
 		if save:
 			self.save()
+
+	def aggregate_item_qty_1(self):
+		locations = self.get('locations')
+		self.item_count_map = {}
+		# aggregate qty for same item
+		item_map = OrderedDict()
+		for item in locations:
+			if not item.item_code:
+				frappe.throw("Row #{0}: Item Code is Mandatory".format(item.idx))
+			item_code = item.item_code
+			reference = item.sales_order_item or item.material_request_item
+			key = (item_code, item.uom, reference, item.warehouse, item.shelf)
+
+			item.idx = None
+			item.name = None
+
+			if item_map.get(key):
+				item_map[key].qty += item.qty
+				item_map[key].stock_qty += item.stock_qty
+			else:
+				item_map[key] = item
+
+			# maintain count of each item (useful to limit get query)
+			self.item_count_map.setdefault(item_code, 0)
+			self.item_count_map[item_code] += item.stock_qty
+
+		return item_map.values()
 
 def get_available_item_locations(item_code, from_warehouses, required_qty, company, ignore_validation=False):
 	locations = []

@@ -117,6 +117,7 @@ def get_columns(filters):
 
 def get_conditions(filters):
 	conditions = ""
+
 	if not filters.get("from_date"):
 		frappe.throw(_("'From Date' is required"))
 
@@ -125,9 +126,12 @@ def get_conditions(filters):
 	else:
 		frappe.throw(_("'To Date' is required"))
 
-	for field in ["item_code", "warehouse", "batch_no", "company", "shelf"]:
+	for field in ["item_code", "batch_no", "company", "shelf"]:
 		if filters.get(field):
 			conditions += " and {0} = {1}".format(field, frappe.db.escape(filters.get(field)))
+
+	if filters.get('warehouse'):
+		conditions += f" and warehouse in {tuple(filters.get('warehouse'))}"
 
 	return conditions
 
