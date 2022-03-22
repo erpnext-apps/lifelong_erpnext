@@ -7,7 +7,7 @@ def execute():
 	df = dict(fieldname='shelf', insert_after='warehouse',
 		label='Shelf', fieldtype='Link', options='Shelf')
 
-	for doctype in ['Putaway Rule', 'Stock Ledger Entry',
+	for doctype in ['Putaway Rule', 'Stock Ledger Entry', 'Sales Invoice Item', 'Purchase Invoice Item',
 		'Purchase Receipt Item', 'Stock Entry Detail', 'Delivery Note Item', 'Pick List Item']:
 		create_custom_field(doctype, df)
 
