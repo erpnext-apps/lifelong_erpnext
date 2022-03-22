@@ -131,7 +131,10 @@ def get_conditions(filters):
 			conditions += " and {0} = {1}".format(field, frappe.db.escape(filters.get(field)))
 
 	if filters.get('warehouse'):
-		conditions += f" and warehouse in {tuple(filters.get('warehouse'))}"
+		if isinstance(warehouse, str):
+			conditions += f" and warehouse = {frappe.db.escape(warehouse)}"
+		else:
+			conditions += f" and warehouse in {tuple(filters.get('warehouse'))}"
 
 	return conditions
 
