@@ -109,6 +109,12 @@ override_doctype_class = {
 doc_events = {
 	"Stock Ledger Entry": {
 		"validate": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_ledger_entry.update_shelf_data",
+	},
+	"Purchase Receipt": {
+		"before_submit": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils.create_batch",
+	},
+	"Stock Entry": {
+		"before_submit": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils.create_batch",
 	}
 }
 

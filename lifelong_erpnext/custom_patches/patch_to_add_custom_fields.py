@@ -5,10 +5,14 @@ def execute():
 	frappe.reload_doc('lifelong_erpnext', 'doctype', 'shelf')
 
 	df = dict(fieldname='shelf', insert_after='warehouse',
-		label='Shelf', fieldtype='Link', options='Shelf')
+		label='Shelf', fieldtype='Link', options='Shelf', in_list_view=1)
 
 	for doctype in ['Putaway Rule', 'Stock Ledger Entry', 'Sales Invoice Item', 'Purchase Invoice Item',
-		'Purchase Receipt Item', 'Stock Entry Detail', 'Delivery Note Item', 'Pick List Item']:
+		'Purchase Receipt Item', 'Stock Entry Detail', 'Delivery Note Item', 'Pick List Item',
+		'Stock Reconciliation Item']:
+		if doctype in ['Sales Invoice Item', 'Purchase Invoice Item']:
+			df['depends_on'] = 'eval:parent.update_stock == 1'
+
 		create_custom_field(doctype, df)
 
 	create_custom_field('Putaway Rule',
@@ -19,11 +23,12 @@ def execute():
 		dict(fieldname='has_shelf', label='Has Shelf',
 			fieldtype='Check', insert_after='disabled'))
 
-	create_custom_fields({
-		"Delivery Note Item": [
-			dict(fieldname='edit_batch', label='Edit Batch',
-				fieldtype='Button', in_list_view=1, insert_after='shelf'),
-			dict(fieldname='actual_shelf_batch_qty', label='Actual Batch Qty',
-				fieldtype='Float', hidden=1, insert_after='edit_batch'),
-		]
-	})
+	for doctype in ['Sales Invoice Item', 'Delivery Note Item', 'Stock Entry Detail']:
+		create_custom_fields({
+			doctype: [
+				dict(fieldname='edit_batch', label='Edit Batch',
+					fieldtype='Button', in_list_view=1, insert_after='shelf'),
+				dict(fieldname='actual_shelf_batch_qty', label='Actual Batch Qty',
+					fieldtype='Float', hidden=1, insert_after='edit_batch'),
+			]
+		})

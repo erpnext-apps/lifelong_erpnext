@@ -81,3 +81,25 @@ def get_available_batches(item_code, warehouse, company, qty=0, batch_no=None, s
 			new_data.append(row)
 
 	return new_data
+
+def create_batch(doc, method):
+	non_duplicate_items = {}
+	for row in doc.items:
+		if row.item_code in non_duplicate_items:
+			row.batch_no = non_duplicate_items.get(row.item_code)
+			continue
+
+		if (doc.doctype == 'Stock Entry' and doc.purpose in ['Repack', 'Manufacture', 'Material Receipt']
+			and row.t_warehouse) or doc.doctype == 'Purchase Receipt':
+			if not frappe.get_cached_value('Item', row.item_code, 'has_batch_no'):
+				continue
+
+			row.batch_no = frappe.get_doc({
+				'doctype': 'Batch',
+				'item': row.item_code,
+				'reference_doctype': doc.doctype,
+				'reference_name': doc.name
+			}).insert(ignore_permissions=True).name
+
+			non_duplicate_items.setdefault(row.item_code, row.batch_no)
+
