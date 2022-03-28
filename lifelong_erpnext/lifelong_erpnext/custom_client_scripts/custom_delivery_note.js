@@ -1,4 +1,11 @@
 
+frappe.ui.form.on('Delivery Note', {
+	setup(frm) {
+		erpnext.queries.setup_shelf_query(frm);
+	}
+})
+
+
 frappe.ui.form.on('Delivery Note Item', {
 	edit_batch(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];

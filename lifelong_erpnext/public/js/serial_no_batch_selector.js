@@ -1,5 +1,33 @@
+erpnext.stock.select_batch_and_serial_no = (frm, item) => {
+	let get_warehouse_type_and_name = (item) => {
+		let value = '';
+		if(frm.fields_dict.from_warehouse.disp_status === "Write") {
+			value = cstr(item.s_warehouse) || '';
+			return {
+				type: 'Source Warehouse',
+				name: value
+			};
+		} else {
+			value = cstr(item.t_warehouse) || '';
+			return {
+				type: 'Target Warehouse',
+				name: value
+			};
+		}
+	}
+
+	if(item && !item.has_serial_no && !item.has_batch_no) return;
+	if (frm.doc.purpose === 'Material Receipt') return;
+
+	new erpnext.SerialNoBatchSelector({
+		frm: frm,
+		item: item,
+		warehouse_details: get_warehouse_type_and_name(item),
+	}, true);
+}
+
 erpnext.show_serial_batch_selector = function (frm, d, callback, on_close, show_dialog) {
-    let warehouse, receiving_stock, existing_stock;
+	let warehouse, receiving_stock, existing_stock;
 
 	if (frm.doc.is_return) {
 		if (["Purchase Receipt", "Purchase Invoice"].includes(frm.doc.doctype)) {
@@ -51,9 +79,14 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 		let d = this.item;
 		this.has_batch = 0; this.has_serial_no = 0;
 
-		if (d && d.has_batch_no && (!d.batch_no || this.show_dialog)) this.has_batch = 1;
+		if (d && d.has_batch_no && (!d.batch_no || this.show_dialog)) {
+			this.has_batch = 1
+		};
+
 		// !(this.show_dialog == false) ensures that show_dialog is implictly true, even when undefined
-		if(d && d.has_serial_no && !(this.show_dialog == false)) this.has_serial_no = 1;
+		if(d && d.has_serial_no && !(this.show_dialog == false)) {
+			this.has_serial_no = 1
+		};
 
 		this.setup();
 	}
@@ -440,7 +473,7 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 
 		return [
 			{fieldtype:'Section Break', label: __('Batches')},
-			{fieldname: 'batches', fieldtype: 'Table', label: __('Batch Entries'),
+			{fieldname: 'batches', fieldtype: 'Table', label: __('Batch Entries'), configure_columns: false,
 				fields: [
 					{
 						'fieldtype': 'Link',
@@ -737,4 +770,19 @@ function check_can_calculate_pending_qty(me) {
 		&& erpnext.stock.bom.name === doc.bom_no;
 	const itemChecks = !!item  && !item.allow_alternative_item;
 	return docChecks && itemChecks;
+}
+
+erpnext.queries.setup_shelf_query = function(frm){
+	frm.set_query('shelf', 'items', function(doc, cdt, cdn) {
+		var row  = locals[cdt][cdn];
+
+		let warehouse = row.warehouse || row.s_warehouse || row.t_warehouse;
+		if (warehouse) {
+			return {
+				filters: {
+					'warehouse': warehouse
+				}
+			}
+		}
+	});
 }

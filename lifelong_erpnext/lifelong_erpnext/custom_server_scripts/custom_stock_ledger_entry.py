@@ -21,8 +21,30 @@ def update_shelf_data(doc, method):
 	if not doc.batch_no:
 		return
 
+	validate_shelf_data(doc)
+
+def validate_shelf_data(doc):
+	shelf_warehouse = frappe.get_cached_value('Shelf', doc.shelf, 'warehouse')
+	if (doc.shelf and doc.warehouse and shelf_warehouse != doc.warehouse):
+		frappe.throw(_(f'''The shelf {bold(doc.shelf)} does belong to the warehouse {shelf_warehouse}
+			and does not belong to the warehouse {bold(doc.warehouse)}'''))
+
+	if doc.shelf and not frappe.db.exists('Shelf', doc.shelf):
+		frappe.throw(_(f"Shelf {doc.shelf} doesn't exists"), title= _('Shelf Not Exists'))
+
+	if doc.actual_qty > 0:
+		return
+
 	data = get_available_batches(doc.item_code, doc.warehouse, doc.company,
 		batch_no=doc.batch_no, shelf=doc.shelf)
+
+	if not data:
+		msg = (f'''The stock not exists for the item {bold(doc.item_code)} and batch {bold(doc.batch_no)}
+			in the shelf {bold(doc.shelf)} for the warehouse {bold(doc.warehouse)}. <br><br>
+			Either you need to increase the stock in the respective shelf and warehouse to complete
+			this entry or select the different batch and shelf which has the sufficient stock.''')
+
+		frappe.throw(_(msg), title= _('Insufficient Stock Error'))
 
 	for row in data:
 		if (row.qty + doc.actual_qty) < 0:

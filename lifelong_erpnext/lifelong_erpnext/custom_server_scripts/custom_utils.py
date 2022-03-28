@@ -103,3 +103,7 @@ def create_batch(doc, method):
 
 			non_duplicate_items.setdefault(row.item_code, row.batch_no)
 
+
+@frappe.whitelist()
+def has_batch_no(item_code):
+	return frappe.db.get_value('Item', item_code, ['has_batch_no', 'has_serial_no'], as_dict=1)

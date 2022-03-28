@@ -119,7 +119,9 @@ doc_events = {
 }
 
 doctype_js = {
-	"Delivery Note" : "lifelong_erpnext/custom_client_scripts/custom_delivery_note.js"
+	"Delivery Note" : "lifelong_erpnext/custom_client_scripts/custom_delivery_note.js",
+	"Purchase Receipt" : "lifelong_erpnext/custom_client_scripts/custom_purchase_receipt.js",
+	"Stock Entry" : "lifelong_erpnext/custom_client_scripts/custom_stock_entry.js"
 }
 
 # Scheduled Tasks

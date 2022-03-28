@@ -13,6 +13,9 @@ def execute():
 		if doctype in ['Sales Invoice Item', 'Purchase Invoice Item']:
 			df['depends_on'] = 'eval:parent.update_stock == 1'
 
+		if doctype in ['Stock Ledger Entry']:
+			df['read_only'] = 1
+
 		create_custom_field(doctype, df)
 
 	create_custom_field('Putaway Rule',
