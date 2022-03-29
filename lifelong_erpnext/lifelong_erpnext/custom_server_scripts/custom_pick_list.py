@@ -74,12 +74,12 @@ def get_available_item_locations(item_code, from_warehouses, required_qty, compa
 
 	total_qty_available = sum(location.get('qty') for location in locations)
 
-	remaining_qty = required_qty - total_qty_available
+	# remaining_qty = required_qty - total_qty_available
 
-	if remaining_qty > 0 and not ignore_validation:
-		frappe.msgprint(_('{0} units of Item {1} is not available.')
-			.format(remaining_qty, frappe.get_desk_link('Item', item_code)),
-			title=_("Insufficient Stock"))
+	# if remaining_qty > 0 and not ignore_validation:
+	# 	frappe.msgprint(_('{0} units of Item {1} is not available.')
+	# 		.format(remaining_qty, frappe.get_desk_link('Item', item_code)),
+	# 		title=_("Insufficient Stock"))
 
 	return locations
 
