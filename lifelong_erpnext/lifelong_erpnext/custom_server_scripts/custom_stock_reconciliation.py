@@ -190,6 +190,49 @@ class CustomStockReconciliation(StockReconciliation):
 			# update valuation rate
 			self.update_valuation_rate_for_serial_nos(row, serial_nos)
 
+	def get_sle_for_items(self, row, serial_nos=None):
+		"""Insert Stock Ledger Entries"""
+
+		if not serial_nos and row.serial_no:
+			serial_nos = get_serial_nos(row.serial_no)
+
+		data = frappe._dict({
+			"doctype": "Stock Ledger Entry",
+			"item_code": row.item_code,
+			"warehouse": row.warehouse,
+			"posting_date": self.posting_date,
+			"posting_time": self.posting_time,
+			"voucher_type": self.doctype,
+			"voucher_no": self.name,
+			"voucher_detail_no": row.name,
+			"company": self.company,
+			"stock_uom": frappe.db.get_value("Item", row.item_code, "stock_uom"),
+			"is_cancelled": 1 if self.docstatus == 2 else 0,
+			"serial_no": '\n'.join(serial_nos) if serial_nos else '',
+			"batch_no": row.batch_no,
+			"shelf": row.shelf,
+			"valuation_rate": flt(row.valuation_rate, row.precision("valuation_rate"))
+		})
+
+		if not row.batch_no:
+			data.qty_after_transaction = flt(row.qty, row.precision("qty"))
+
+		if self.docstatus == 2 and not row.batch_no:
+			if row.current_qty:
+				data.actual_qty = -1 * row.current_qty
+				data.qty_after_transaction = flt(row.current_qty)
+				data.previous_qty_after_transaction = flt(row.qty)
+				data.valuation_rate = flt(row.current_valuation_rate)
+				data.stock_value = data.qty_after_transaction * data.valuation_rate
+				data.stock_value_difference = -1 * flt(row.amount_difference)
+			else:
+				data.actual_qty = row.qty
+				data.qty_after_transaction = 0.0
+				data.valuation_rate = flt(row.valuation_rate)
+				data.stock_value_difference = -1 * flt(row.amount_difference)
+
+		return data
+
 @frappe.whitelist()
 def get_stock_balance_for(*args, **kargs):
 	frappe.has_permission("Stock Reconciliation", "write", throw = True)

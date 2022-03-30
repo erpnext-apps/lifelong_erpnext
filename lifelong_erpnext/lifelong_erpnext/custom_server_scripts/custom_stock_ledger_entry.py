@@ -18,7 +18,7 @@ def update_shelf_data(doc, method):
 		and not doc.shelf and frappe.get_cached_value('Warehouse', doc.warehouse, 'has_shelf')):
 		frappe.throw(f"The shelf is required for the warehouse {doc.warehouse}")
 
-	if not doc.batch_no:
+	if not doc.batch_no or doc.voucher_type == 'Stock Reconciliation':
 		return
 
 	validate_shelf_data(doc)
