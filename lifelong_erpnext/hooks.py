@@ -99,7 +99,8 @@ override_doctype_class = {
 	"Putaway Rule": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_putaway_rule.CustomPutawayRule",
     "Purchase Receipt": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockController",
 	"Stock Entry": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockEntry",
-	"Pick List": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_pick_list.CustomPickList"
+	"Pick List": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_pick_list.CustomPickList",
+	"Stock Reconciliation": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_reconciliation.CustomStockReconciliation"
 }
 
 # Document Events
