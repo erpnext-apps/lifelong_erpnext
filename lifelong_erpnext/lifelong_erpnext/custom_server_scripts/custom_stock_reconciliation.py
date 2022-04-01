@@ -15,7 +15,8 @@ class CustomStockReconciliation(StockReconciliation):
 		self.difference_amount = 0.0
 		def _changed(item):
 			item_dict = get_stock_balance_for(item.item_code, item.warehouse,
-				self.posting_date, self.posting_time, batch_no=item.batch_no, shelf=item.shelf, company=self.company)
+				self.posting_date, self.posting_time, batch_no=item.batch_no,
+				shelf=item.shelf, company=self.company, with_valuation_rate=True)
 
 			if ((item.qty is None or item.qty==item_dict.get("qty")) and
 				(item.valuation_rate is None or item.valuation_rate==item_dict.get("rate")) and
