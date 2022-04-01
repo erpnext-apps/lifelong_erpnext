@@ -23,6 +23,31 @@ def execute():
 		dict(fieldname='volumetric_weight', label='Volumetric Weight',
 			fieldtype='Float', insert_after='conversion_factor'))
 
+	create_custom_field('Purchase Receipt Item',
+		dict(fieldname='from_shelf', label='From Shelf',
+			read_only = 1, fieldtype='Link', options='Shelf', insert_after='shelf',
+			depends_on='eval:parent.is_internal_supplier || doc.from_warehouse'))
+
+	create_custom_field('Delivery Note Item',
+		dict(fieldname='target_shelf', label='Target Shelf',
+			fieldtype='Link', options='Shelf', insert_after='target_warehouse',
+			depends_on='eval:parent.is_internal_customer || doc.target_warehouse'))
+
+	create_custom_field('Delivery Note',
+		dict(fieldname='target_shelf', label='Target Shelf',
+			fieldtype='Link', options='Shelf', insert_after='set_target_warehouse',
+			depends_on='eval:parent.is_internal_customer || doc.set_target_warehouse'))
+
+	create_custom_field('Stock Entry Detail',
+		dict(fieldname='target_shelf', label='Target Shelf',
+			fieldtype='Link', options='Shelf', insert_after='shelf',
+			depends_on='eval:parent.purpose == "Material Transfer"'))
+
+	create_custom_field('Stock Entry',
+		dict(fieldname='target_shelf', label='Target Shelf',
+			fieldtype='Link', options='Shelf', insert_after='target_warehouse',
+			depends_on='eval:doc.purpose == "Material Transfer"'))
+
 	create_custom_field('Warehouse',
 		dict(fieldname='has_shelf', label='Has Shelf',
 			fieldtype='Check', insert_after='disabled'))

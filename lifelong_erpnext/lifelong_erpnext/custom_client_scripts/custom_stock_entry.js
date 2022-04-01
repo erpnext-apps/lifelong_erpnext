@@ -1,6 +1,7 @@
 frappe.ui.form.on('Stock Entry', {
 	setup(frm) {
 		erpnext.queries.setup_shelf_query(frm);
+		frm.trigger('is_internal_transfer_shelf_query');
 	},
 
 	refresh(frm) {
@@ -9,6 +10,21 @@ frappe.ui.form.on('Stock Entry', {
 
 	stock_entry_type(frm) {
 		frm.trigger('hide_batch_selector');
+		frm.trigger('is_internal_transfer_shelf_query');
+	},
+
+	is_internal_transfer_shelf_query(frm) {
+		if (frm.doc.purpose === 'Material Transfer') {
+			erpnext.queries.setup_child_target_shelf_query(frm);
+		}
+	},
+
+	target_shelf(frm) {
+		if (frm.doc.target_shelf) {
+			frm.doc.items.forEach(row => {
+				frappe.model.set_value(row.doctype, row.name, 'target_shelf', frm.doc.target_shelf);
+			});
+		}
 	},
 
 	hide_batch_selector(frm) {

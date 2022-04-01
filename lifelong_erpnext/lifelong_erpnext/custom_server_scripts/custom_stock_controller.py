@@ -54,6 +54,10 @@ class CustomStockController(PurchaseReceipt):
 					message = self.prepare_over_receipt_message(rule, values)
 					frappe.throw(msg=message, title=_("Over Receipt"))
 
+	def make_batches(self, warehouse_field):
+		'''Create batches if required. Called before submit'''
+		pass
+
 class CustomStockEntry(StockEntry):
 	def before_validate(self):
 		if self.get("items") and self.apply_putaway_rule and not self.get("is_return"):

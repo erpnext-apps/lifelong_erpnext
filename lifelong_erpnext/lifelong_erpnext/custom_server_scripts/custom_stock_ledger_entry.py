@@ -11,20 +11,43 @@ def update_shelf_data(doc, method):
 		'Sales Invoice': 'Sales Invoice Item',
 	}
 
-	if doctype_mapper.get(doc.voucher_type) and doc.voucher_detail_no:
-		doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type), doc.voucher_detail_no, 'shelf')
+	if doctype_mapper.get(doc.voucher_type) and doc.voucher_detail_no and doc.is_cancelled == 0:
+		is_internal_transfer = False
+		if (doc.voucher_type == 'Delivery Note' and
+			frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'is_internal_customer')):
+			is_internal_transfer = True
 
-	if (doc.voucher_type in ['Stock Entry', 'Purchase Receipt', 'Purchase Invoice', 'Sales Invoice'] and doc.warehouse
-		and not doc.shelf and frappe.get_cached_value('Warehouse', doc.warehouse, 'has_shelf')):
-		frappe.throw(f"The shelf is required for the warehouse {doc.warehouse}")
+		if (doc.voucher_type == 'Stock Entry' and
+			frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'purpose') == 'Material Transfer'):
+			is_internal_transfer = True
+
+		if is_internal_transfer and doc.actual_qty > 0:
+			doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+				doc.voucher_detail_no, 'target_shelf')
+		elif not doc.voucher_type == 'Purchase Receipt' or doc.actual_qty > 0:
+			doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+				doc.voucher_detail_no, 'shelf')
+
+		if (doc.voucher_type == 'Purchase Receipt' and doc.actual_qty < 0 and
+			frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'is_internal_supplier')):
+			doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+				doc.voucher_detail_no, 'from_shelf')
+
+	if not doc.shelf and doc.is_cancelled == 0:
+		has_shelf_ledgers = frappe.get_all('Stock Ledger Entry', fields=['name'],
+			filters = {'item_code': doc.item_code, 'is_cancelled': 0, 'shelf': ['is', 'set']}, limit=1)
+
+		if has_shelf_ledgers:
+			frappe.throw(_(f'Shelf required for the item {bold(doc.item_code)} and warehouse {bold(doc.warehouse)}'))
 
 	if not doc.batch_no or doc.voucher_type == 'Stock Reconciliation':
 		return
 
-	validate_shelf_data(doc)
+	if doc.shelf and doc.is_cancelled == 0:
+		validate_shelf_data(doc)
 
 def validate_shelf_data(doc):
-	shelf_warehouse = frappe.get_cached_value('Shelf', doc.shelf, 'warehouse')
+	shelf_warehouse = frappe.db.get_value('Shelf', doc.shelf, 'warehouse')
 	if (doc.shelf and doc.warehouse and shelf_warehouse != doc.warehouse):
 		frappe.throw(_(f'''The shelf {bold(doc.shelf)} does belong to the warehouse {shelf_warehouse}
 			and does not belong to the warehouse {bold(doc.warehouse)}'''))

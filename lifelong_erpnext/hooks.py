@@ -112,6 +112,7 @@ doc_events = {
 		"validate": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_ledger_entry.update_shelf_data",
 	},
 	"Purchase Receipt": {
+		"validate": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils.update_shelf_for_from_warehouse",
 		"before_submit": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils.create_batch",
 	},
 	"Stock Entry": {

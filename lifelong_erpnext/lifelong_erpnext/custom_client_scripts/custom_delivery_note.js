@@ -2,6 +2,26 @@
 frappe.ui.form.on('Delivery Note', {
 	setup(frm) {
 		erpnext.queries.setup_shelf_query(frm);
+		frm.trigger('is_internal_customer_shelf_query');
+	},
+
+	is_internal_customer(frm) {
+		frm.trigger('is_internal_customer_shelf_query');
+	},
+
+	is_internal_customer_shelf_query(frm) {
+		if (frm.doc.is_internal_customer) {
+			erpnext.queries.setup_child_target_shelf_query(frm);
+			erpnext.queries.setup_parent_taget_shelf_query(frm);
+		}
+	},
+
+	target_shelf(frm) {
+		if (frm.doc.target_shelf) {
+			frm.doc.items.forEach(row => {
+				frappe.model.set_value(row.doctype, row.name, 'target_shelf', frm.doc.target_shelf);
+			});
+		}
 	}
 })
 

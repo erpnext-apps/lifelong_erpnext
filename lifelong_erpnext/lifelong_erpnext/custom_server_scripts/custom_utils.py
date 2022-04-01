@@ -85,6 +85,9 @@ def get_available_batches(item_code, warehouse, company, qty=0, batch_no=None, s
 def create_batch(doc, method):
 	non_duplicate_items = {}
 	for row in doc.items:
+		if row.batch_no:
+			continue
+
 		if row.item_code in non_duplicate_items:
 			row.batch_no = non_duplicate_items.get(row.item_code)
 			continue
@@ -103,7 +106,30 @@ def create_batch(doc, method):
 
 			non_duplicate_items.setdefault(row.item_code, row.batch_no)
 
-
 @frappe.whitelist()
 def has_batch_no(item_code):
 	return frappe.db.get_value('Item', item_code, ['has_batch_no', 'has_serial_no'], as_dict=1)
+
+
+def update_shelf_for_from_warehouse(doc, method):
+	if not doc.is_internal_supplier:
+		return
+
+	dn_items = [row.delivery_note_item for row in doc.items if row.delivery_note_item]
+
+	if not dn_items:
+		return
+
+	shelf_data = get_shelf_from_delivery_note(dn_items)
+
+	for row in doc.items:
+		if row.delivery_note_item in shelf_data:
+			row.from_shelf = shelf_data[row.delivery_note_item]
+
+def get_shelf_from_delivery_note(dn_items):
+	shelf_dict = frappe._dict({})
+	for row in frappe.get_all('Delivery Note Item', fields = ['name', 'target_shelf'],
+		filters = {'name': ('in', dn_items)}):
+		shelf_dict[row.name] = row.target_shelf
+
+	return shelf_dict

@@ -786,3 +786,31 @@ erpnext.queries.setup_shelf_query = function(frm){
 		}
 	});
 }
+
+erpnext.queries.setup_child_target_shelf_query = function(frm){
+	frm.set_query('target_shelf', 'items', function(doc, cdt, cdn) {
+		var row  = locals[cdt][cdn];
+
+		let warehouse = row.target_warehouse || row.t_warehouse;
+		if (warehouse) {
+			return {
+				filters: {
+					'warehouse': warehouse
+				}
+			}
+		}
+	});
+}
+
+erpnext.queries.setup_parent_taget_shelf_query = function(frm){
+	frm.set_query('target_shelf', function(doc, cdt, cdn) {
+		let warehouse = doc.set_target_warehouse || doc.target_warehouse;
+		if (warehouse) {
+			return {
+				filters: {
+					'warehouse': warehouse
+				}
+			}
+		}
+	});
+}
