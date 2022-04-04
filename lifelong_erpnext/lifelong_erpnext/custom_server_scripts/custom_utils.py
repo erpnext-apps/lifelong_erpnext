@@ -50,10 +50,10 @@ def get_stock_balance(args, operator=None,
 	return entry[0].qty_after_transaction if entry else 0.0
 
 @frappe.whitelist()
-def get_available_batches(item_code, warehouse, company, qty=0, batch_no=None, shelf=None):
+def get_available_batches(item_code, warehouse, company, qty=0, batch_no=None, shelf=None, posting_time=None):
 	qty = flt(qty)
 
-	columns, data = execute(frappe._dict({
+	filters = frappe._dict({
 		'item_code': item_code,
 		'warehouse': warehouse,
 		'company': company,
@@ -61,7 +61,12 @@ def get_available_batches(item_code, warehouse, company, qty=0, batch_no=None, s
 		'to_date': nowdate(),
 		'batch_no': batch_no,
 		'shelf': shelf
-	}))
+	})
+
+	if posting_time:
+		filters.posting_time = posting_time
+
+	columns, data = execute(filters)
 
 	if not qty:
 		return data

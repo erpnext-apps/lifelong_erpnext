@@ -156,7 +156,8 @@ doctype_js = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-	"erpnext.stock.doctype.putaway_rule.putaway_rule.apply_putaway_rule": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_putaway_rule.apply_putaway_rule"
+	"erpnext.stock.doctype.putaway_rule.putaway_rule.apply_putaway_rule": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_putaway_rule.apply_putaway_rule",
+	"erpnext.stock.doctype.stock_reconciliation.stock_reconciliation.get_items": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_reconciliation.get_items"
 }
 #
 # each overriding function accepts a `data` argument;

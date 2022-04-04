@@ -5,9 +5,11 @@ from frappe.utils import cint, cstr, flt
 from erpnext.stock.doctype.batch.batch import get_batch_qty
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 from erpnext.stock.utils import get_stock_balance
+from erpnext.stock.doctype.warehouse.warehouse import get_children
 
 from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils import get_available_batches
-from erpnext.stock.doctype.stock_reconciliation.stock_reconciliation import StockReconciliation
+from erpnext.stock.doctype.stock_reconciliation.stock_reconciliation import (StockReconciliation,
+	get_items_for_stock_reco, get_item_data, EmptyStockReconciliationItemsError)
 
 class CustomStockReconciliation(StockReconciliation):
 	def remove_items_with_no_change(self):
@@ -18,9 +20,16 @@ class CustomStockReconciliation(StockReconciliation):
 				self.posting_date, self.posting_time, batch_no=item.batch_no,
 				shelf=item.shelf, company=self.company, with_valuation_rate=True)
 
-			if ((item.qty is None or item.qty==item_dict.get("qty")) and
-				(item.valuation_rate is None or item.valuation_rate==item_dict.get("rate")) and
-				(not item.serial_no or (item.serial_no == item_dict.get("serial_nos")) )):
+			if ((
+					item.qty is None or item.qty==item_dict.get("qty")) and
+				(
+					item.valuation_rate is None
+						or item.valuation_rate==(item_dict.get("rate")
+						or item_dict.get("valuation_rate"))
+				) and
+				(
+					not item.serial_no or (item.serial_no == item_dict.get("serial_nos"))
+				)):
 				return False
 			else:
 				# set default as current rates
@@ -36,10 +45,11 @@ class CustomStockReconciliation(StockReconciliation):
 						item.serial_no = item.current_serial_no
 
 				item.current_qty = item_dict.get("qty")
-				item.current_valuation_rate = item_dict.get("rate")
+				item.current_valuation_rate = item_dict.get("rate") or item_dict.get("valuation_rate")
 				self.difference_amount += (flt(item.qty, item.precision("qty")) * \
-					flt(item.valuation_rate or item_dict.get("rate"), item.precision("valuation_rate")) \
-					- flt(item_dict.get("qty"), item.precision("qty")) * flt(item_dict.get("rate"), item.precision("valuation_rate")))
+					flt(item.valuation_rate or item.current_valuation_rate, item.precision("valuation_rate")) \
+					- flt(item_dict.get("qty"), item.precision("qty")) * flt(item.current_valuation_rate, item.precision("valuation_rate")))
+
 				return True
 
 		items = list(filter(lambda d: _changed(d), self.items))
@@ -252,7 +262,7 @@ def get_stock_balance_for(*args, **kargs):
 	if kargs.shelf:
 		if kargs.batch_no:
 			data = get_available_batches(item_code, warehouse,
-				kargs.company, batch_no=kargs.batch_no, shelf=kargs.shelf)
+				kargs.company, batch_no=kargs.batch_no, shelf=kargs.shelf, posting_time=posting_time)
 			if data:
 				return data[0]
 		else:
@@ -276,3 +286,63 @@ def get_stock_balance_for(*args, **kargs):
 		'rate': rate,
 		'serial_nos': serial_nos
 	}
+
+@frappe.whitelist()
+def get_items(warehouse, posting_date, posting_time, company, item_code=None, ignore_empty_stock=False):
+	ignore_empty_stock = cint(ignore_empty_stock)
+	items = [frappe._dict({
+		'item_code': item_code,
+		'warehouse': warehouse
+	})]
+
+	if not item_code:
+		items = get_items_for_stock_reco(warehouse, company)
+
+	res = []
+
+	itemwise_batch_data = []
+
+	if frappe.get_cached_value('Warehouse', warehouse, 'is_group'):
+		warehouse_data =  get_children('Warehouse', warehouse, company)
+		if warehouse_data:
+			warehouse = [w_data.value for w_data in warehouse_data]
+
+	add_shelf_wise_batch_data(warehouse, company, posting_date, posting_time, res, itemwise_batch_data)
+
+	for d in items:
+		if d.item_code in itemwise_batch_data:
+			continue
+
+		stock_bal = get_stock_balance(d.item_code, d.warehouse, posting_date, posting_time,
+			with_valuation_rate=True , with_serial_no=cint(d.has_serial_no))
+		qty, valuation_rate, serial_no = stock_bal[0], stock_bal[1], stock_bal[2] if cint(d.has_serial_no) else ''
+
+		if ignore_empty_stock and not stock_bal[0]:
+			continue
+
+		args = get_item_data(d, qty, valuation_rate, serial_no)
+
+		res.append(args)
+
+	return res
+
+def add_shelf_wise_batch_data(warehouse, company, posting_date, posting_time, res, itemwise_batch_data):
+	from lifelong_erpnext.lifelong_erpnext.report.shelf_wise_batch_balance_report.shelf_wise_batch_balance_report import (
+		execute)
+
+	columns, data = execute(frappe._dict({
+		'warehouse': warehouse,
+		'company': company,
+		'from_date': posting_date,
+		'to_date': posting_date,
+		'posting_time': posting_time
+	}))
+
+	for row in data:
+		if not row.item_code in itemwise_batch_data:
+			itemwise_batch_data.append(row.item_code)
+
+		row.qty = row.bal_qty
+		row.current_valuation_rate = row.valuation_rate
+		row.current_qty = row.bal_qty
+		res.append(row)

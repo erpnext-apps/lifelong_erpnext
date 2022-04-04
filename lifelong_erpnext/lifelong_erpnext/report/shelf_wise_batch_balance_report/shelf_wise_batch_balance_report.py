@@ -3,6 +3,7 @@
 
 import frappe
 from frappe import _
+import datetime
 from frappe.utils import cint, flt, getdate, get_datetime, nowdate
 
 
@@ -102,15 +103,14 @@ def get_columns(filters):
 			'fieldtype': 'Datetime',
 			'label': 'Creation',
 			'width': 180
+		},
+		{
+			'fieldname': 'valuation_rate',
+			'fieldtype': 'Float',
+			'label': 'Valuation Rate',
+			'width': 180
 		}
 	]
-
-
-	[_("Item") + ":Link/Item:100"] + [_("Item Name") + "::150"] + [_("Description") + "::150"] + \
-		[_("Warehouse") + ":Link/Warehouse:100"] + [_("Shelf") + ":Link/Shelf:100"] \
-		+ [_("Batch") + ":Link/Batch:100"] + [_("Opening Qty") + ":Float:90"] + \
-		[_("In Qty") + ":Float:80"] + [_("Out Qty") + ":Float:80"] + [_("Balance Qty") + ":Float:90"] + \
-		[_("UOM") + "::90"]
 
 	return columns
 
@@ -121,8 +121,13 @@ def get_conditions(filters):
 	if not filters.get("from_date"):
 		frappe.throw(_("'From Date' is required"))
 
-	if filters.get("to_date"):
+	if filters.get("to_date") and filters.get("posting_time"):
+		conditions += f""" and timestamp(posting_date, posting_time)
+			<= timestamp('{filters["to_date"]}', '{filters.get("posting_time")}')"""
+
+	elif filters.get("to_date"):
 		conditions += " and posting_date <= '%s'" % filters["to_date"]
+
 	else:
 		frappe.throw(_("'To Date' is required"))
 
@@ -150,7 +155,7 @@ def get_stock_ledger_entries(filters):
 		SELECT
 			sle.item_code, sle.batch_no, sle.warehouse, sle.posting_date,
 			sum(sle.actual_qty) as qty, sle.shelf, DATE_FORMAT(batch.creation, '%Y-%m-%d %H:%i:%s') as creation,
-			batch.item_name, batch.description, batch.stock_uom
+			batch.item_name, batch.description, batch.stock_uom, sle.valuation_rate
 		FROM
 			`tabStock Ledger Entry` sle, `tabBatch` batch
 		WHERE
@@ -176,7 +181,7 @@ def get_item_warehouse_batch_map(filters, float_precision):
 		iwb_map.setdefault(key, frappe._dict({
 			"opening_qty": 0.0, "in_qty": 0.0, "out_qty": 0.0, "bal_qty": 0.0, "creation": get_datetime(d.creation),
 			"item_code": d.item_code, "warehouse": d.warehouse, "batch_no": d.batch_no, "shelf": d.shelf,
-			"item_name": d.item_name, "description": d.description, "stock_uom": d.stock_uom
+			"item_name": d.item_name, "description": d.description, "stock_uom": d.stock_uom, "valuation_rate": d.valuation_rate
 		}))
 
 		qty_dict = iwb_map[key]
