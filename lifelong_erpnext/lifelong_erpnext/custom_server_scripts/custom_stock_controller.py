@@ -1,7 +1,7 @@
 import frappe
 
 from collections import defaultdict
-from frappe.utils import flt, nowdate, nowtime
+from frappe.utils import flt, nowdate, nowtime, cstr
 from frappe import _
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import PurchaseReceipt
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
@@ -99,7 +99,6 @@ class CustomStockEntry(StockEntry):
 					d.t_warehouse = self.to_warehouse
 				else:
 					frappe.throw(_("Target warehouse is mandatory for row {0}").format(d.idx))
-
 
 			if self.purpose == "Manufacture":
 				if validate_for_manufacture:
