@@ -63,6 +63,61 @@ class CustomStockEntry(StockEntry):
 		if self.get("items") and self.apply_putaway_rule and not self.get("is_return"):
 			apply_putaway_rule(self.doctype, self.get("items"), self.company)
 
+	def validate_warehouse(self):
+		"""perform various (sometimes conditional) validations on warehouse"""
+
+		source_mandatory = ["Material Issue", "Material Transfer", "Send to Subcontractor", "Material Transfer for Manufacture",
+			"Material Consumption for Manufacture"]
+
+		target_mandatory = ["Material Receipt", "Material Transfer", "Send to Subcontractor",
+			"Material Transfer for Manufacture"]
+
+		validate_for_manufacture = any([d.bom_no for d in self.get("items")])
+
+		if self.purpose in source_mandatory and self.purpose not in target_mandatory:
+			self.to_warehouse = None
+			for d in self.get('items'):
+				d.t_warehouse = None
+		elif self.purpose in target_mandatory and self.purpose not in source_mandatory:
+			self.from_warehouse = None
+			for d in self.get('items'):
+				d.s_warehouse = None
+
+		for d in self.get('items'):
+			if not d.s_warehouse and not d.t_warehouse:
+				d.s_warehouse = self.from_warehouse
+				d.t_warehouse = self.to_warehouse
+
+			if self.purpose in source_mandatory and not d.s_warehouse:
+				if self.from_warehouse:
+					d.s_warehouse = self.from_warehouse
+				else:
+					frappe.throw(_("Source warehouse is mandatory for row {0}").format(d.idx))
+
+			if self.purpose in target_mandatory and not d.t_warehouse:
+				if self.to_warehouse:
+					d.t_warehouse = self.to_warehouse
+				else:
+					frappe.throw(_("Target warehouse is mandatory for row {0}").format(d.idx))
+
+
+			if self.purpose == "Manufacture":
+				if validate_for_manufacture:
+					if d.is_finished_item or d.is_scrap_item or d.is_process_loss:
+						d.s_warehouse = None
+						if not d.t_warehouse:
+							frappe.throw(_("Target warehouse is mandatory for row {0}").format(d.idx))
+					else:
+						d.t_warehouse = None
+						if not d.s_warehouse:
+							frappe.throw(_("Source warehouse is mandatory for row {0}").format(d.idx))
+
+			if cstr(d.s_warehouse) == cstr(d.t_warehouse) and d.shelf == d.target_shelf:
+				frappe.throw(_("Source and target shelf cannot be same for row {0}").format(d.idx))
+
+			if not (d.s_warehouse or d.t_warehouse):
+				frappe.throw(_("Atleast one warehouse is mandatory"))
+
 	def validate_putaway_capacity(self):
 		# if over receipt is attempted while 'apply putaway rule' is disabled
 		# and if rule was applied on the transaction, validate it.
