@@ -16,6 +16,7 @@ frappe.ui.form.on('Stock Entry', {
 	is_internal_transfer_shelf_query(frm) {
 		if (frm.doc.purpose === 'Material Transfer') {
 			erpnext.queries.setup_child_target_shelf_query(frm);
+			erpnext.queries.setup_parent_taget_shelf_query(frm);
 		}
 	},
 

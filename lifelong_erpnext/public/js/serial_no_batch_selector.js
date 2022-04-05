@@ -804,7 +804,7 @@ erpnext.queries.setup_child_target_shelf_query = function(frm){
 
 erpnext.queries.setup_parent_taget_shelf_query = function(frm){
 	frm.set_query('target_shelf', function(doc, cdt, cdn) {
-		let warehouse = doc.set_target_warehouse || doc.target_warehouse;
+		let warehouse = doc.set_target_warehouse || doc.target_warehouse || doc.to_warehouse;
 		if (warehouse) {
 			return {
 				filters: {
