@@ -45,7 +45,7 @@ def execute():
 
 	create_custom_field('Stock Entry',
 		dict(fieldname='target_shelf', label='Target Shelf',
-			fieldtype='Link', options='Shelf', insert_after='target_warehouse',
+			fieldtype='Link', options='Shelf', insert_after='to_warehouse',
 			depends_on='eval:doc.purpose == "Material Transfer"'))
 
 	create_custom_field('Warehouse',
