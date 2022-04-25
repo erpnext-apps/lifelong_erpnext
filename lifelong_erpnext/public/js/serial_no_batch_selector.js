@@ -251,6 +251,8 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 					}
 				});
 				this.dialog.fields_dict.batches.grid.refresh();
+			} else {
+				this.dialog.set_value('qty', this.item.qty);
 			}
 		}
 
@@ -351,10 +353,10 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 				let batch_no = batch.batch_no;
 				let row = '';
 
-				if (!this.batch_exists(batch_no)) {
+				if (!this.batch_exists(batch_no, batch.shelf)) {
 					row = this.frm.add_child("items", { ...this.item });
 				} else {
-					row = this.frm.doc.items.find(i => i.batch_no === batch_no && i.name === batch.row_name);
+					row = this.frm.doc.items.find(i => i.batch_no === batch_no && i.shelf === batch.shelf);
 				}
 
 				if (!row) {
@@ -419,10 +421,15 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 		}
 	}
 
-	batch_exists(batch) {
+	batch_exists(batch, shelf) {
 		if (this.frm.doc.items && this.frm.doc.items.length) {
-			const batches = this.frm.doc.items.map(data => data.batch_no);
-			return (batches && batches.length && in_list(batches, batch)) ? true : false;
+			const batches = this.frm.doc.items.filter(data => {
+				if (data.batch_no === batch && data.shelf === shelf) {
+					return true;
+				}
+			});
+
+			return (batches && batches.length) ? true : false;
 		}
 	}
 
