@@ -24,14 +24,20 @@ def update_shelf_data(doc, method):
 		if is_internal_transfer and doc.actual_qty > 0:
 			doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
 				doc.voucher_detail_no, 'target_shelf')
-		elif not doc.voucher_type == 'Purchase Receipt' or doc.actual_qty > 0:
+		elif doc.voucher_type != 'Purchase Receipt' or doc.actual_qty > 0:
 			doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
 				doc.voucher_detail_no, 'shelf')
 
-		if (doc.voucher_type == 'Purchase Receipt' and doc.actual_qty < 0 and
-			frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'is_internal_supplier')):
-			doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
-				doc.voucher_detail_no, 'from_shelf')
+		if (doc.voucher_type == 'Purchase Receipt' and doc.actual_qty < 0):
+			voucher_data = frappe.db.get_value(doc.voucher_type,
+				doc.voucher_no, ["is_internal_supplier", "is_return"], as_dict=1)
+
+			if voucher_data.is_internal_supplier:
+				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+					doc.voucher_detail_no, 'from_shelf')
+			elif voucher_data.is_return:
+				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+					doc.voucher_detail_no, 'shelf')
 
 	if not doc.shelf and doc.is_cancelled == 0:
 		has_shelf_ledgers = frappe.get_all('Stock Ledger Entry', fields=['name'],
