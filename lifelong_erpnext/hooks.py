@@ -14,7 +14,7 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/lifelong_erpnext/css/lifelong_erpnext.css"
-app_include_js = "/assets/lifelong_erpnext/js/serial_no_batch_selector.js"
+app_include_js = ["/assets/lifelong_erpnext/js/serial_no_batch_selector.js", "/assets/lifelong_erpnext/js/queries.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/lifelong_erpnext/css/lifelong_erpnext.css"

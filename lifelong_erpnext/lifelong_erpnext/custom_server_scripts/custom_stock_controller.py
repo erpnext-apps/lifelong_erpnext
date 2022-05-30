@@ -175,3 +175,60 @@ def get_available_putaway_capacity(rule, posting_date=None, posting_time=None):
 
 	free_space = flt(stock_capacity) - flt(balance_qty)
 	return free_space if free_space > 0 else 0
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def address_query(doctype, txt, searchfield, start, page_len, filters):
+	from frappe.desk.reportview import get_match_cond
+
+	link_doctype = filters.pop('link_doctype')
+	link_name = filters.pop('link_name')
+
+	condition = ""
+	meta = frappe.get_meta("Address")
+	for fieldname, value in filters.items():
+		if meta.get_field(fieldname) or fieldname in frappe.db.DEFAULT_COLUMNS:
+			condition += " and {field}={value}".format(
+				field=fieldname,
+				value=frappe.db.escape(value))
+
+	searchfields = meta.get_search_fields()
+
+	if searchfield and (meta.get_field(searchfield)\
+				or searchfield in frappe.db.DEFAULT_COLUMNS):
+		searchfields.append(searchfield)
+
+	search_condition = ''
+	for field in searchfields:
+		if search_condition == '':
+			search_condition += '`tabAddress`.`{field}` like %(txt)s'.format(field=field)
+		else:
+			search_condition += ' or `tabAddress`.`{field}` like %(txt)s'.format(field=field)
+
+	return frappe.db.sql("""select
+			`tabAddress`.name, `tabAddress`.city, `tabAddress`.country
+		from
+			`tabAddress`, `tabDynamic Link`
+		where
+			`tabDynamic Link`.parent = `tabAddress`.name and
+			`tabDynamic Link`.parenttype = 'Address' and
+			`tabDynamic Link`.link_doctype = %(link_doctype)s and
+			`tabDynamic Link`.link_name = %(link_name)s and
+			ifnull(`tabAddress`.disabled, 0) = 0 and
+			({search_condition})
+			{mcond} {condition}
+		order by
+			if(locate(%(_txt)s, `tabAddress`.name), locate(%(_txt)s, `tabAddress`.name), 99999),
+			`tabAddress`.idx desc, `tabAddress`.name
+		limit %(start)s, %(page_len)s """.format(
+			mcond=get_match_cond(doctype),
+			key=searchfield,
+			search_condition = search_condition,
+			condition=condition or ""), {
+			'txt': '%' + txt + '%',
+			'_txt': txt.replace("%", ""),
+			'start': start,
+			'page_len': page_len,
+			'link_name': link_name,
+			'link_doctype': link_doctype
+		})
