@@ -77,8 +77,11 @@ $.extend(erpnext.queries, {
 	},
 
 	company_address_query: function(doc) {
-		let filters = { is_your_company_address: 1, link_doctype:
-			'Company', link_name: doc.company || '' };
+		let filters = {
+			is_your_company_address: 1,
+			link_doctype:
+			'Company', link_name: doc.company || ''
+		};
 
 		if (doc.branch) {
 			filters['branch'] = doc.branch;
