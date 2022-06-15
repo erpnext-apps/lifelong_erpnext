@@ -162,13 +162,14 @@ def get_document_summary(filters, document_details, nature_of_document):
 			continue
 
 		sorted_names = sorted(name_data["document_names"].items(), key=lambda x: x[1])
-		res.append(frappe._dict({
-			"naming_series": naming_series,
-			"nature_of_document": nature_of_document,
-			"from_serial_no": sorted_names[0][0],
-			"to_serial_no": sorted_names[len(sorted_names) - 1][0],
-			"total_number": name_data.get("tot_count"),
-			"canceled": name_data.get("canceled_count")
-		}))
+		if sorted_names and len(sorted_names[0]) > 0:
+			res.append(frappe._dict({
+				"naming_series": naming_series,
+				"nature_of_document": nature_of_document,
+				"from_serial_no": sorted_names[0][0],
+				"to_serial_no": sorted_names[len(sorted_names) - 1][0],
+				"total_number": name_data.get("tot_count"),
+				"canceled": name_data.get("canceled_count")
+			}))
 
 	return res
