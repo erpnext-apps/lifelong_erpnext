@@ -4,6 +4,8 @@
 import frappe
 from frappe import _
 from frappe.utils import cint, flt
+from frappe.model.naming import parse_naming_series
+from collections import defaultdict
 
 def execute(filters=None):
 	columns = get_columns(filters)
@@ -127,48 +129,46 @@ def get_document_summary(filters, document_details, nature_of_document):
 
 	data = frappe.db.sql(f"""
 		SELECT
-			name, creation, naming_series
+			*
 		FROM
 			`tab{document_details.doctype}`
 		WHERE
 			{condition}
 	""", as_dict=1)
 
-	canceled_documents = frappe.db.sql(f"""
-		SELECT
-			COUNT(name) as total_number, naming_series
-		FROM
-			`tab{document_details.doctype}`
-		WHERE
-			{condition} AND docstatus = 2
-		GROUP BY
-			naming_series
-	""", as_dict=1) or {}
-
-	if canceled_documents:
-		canceled_documents = {row.naming_series: row.total_number for row in canceled_documents}
-
 	naming_series_data = {}
-	for item in data:
-		if item.naming_series not in naming_series_data:
-			naming_series_data.setdefault(item.naming_series, {})
 
-		names = naming_series_data.get(item.naming_series)
-		names[item.name] = item.creation
+	for item in data:
+		naming_series = parse_naming_series(item.naming_series.replace('#', ''), doc=item)
+
+		if naming_series not in naming_series_data:
+			naming_series_data.setdefault(naming_series, {
+				"canceled_count": 0,
+				"tot_count": 0,
+				"document_names": {}
+			})
+
+		names = naming_series_data.get(naming_series)
+		if item.docstatus == 2:
+			names["canceled_count"] += 1
+		else:
+			names["document_names"][item.name] = item.creation
+
+		names["tot_count"] += 1
 
 	res = []
 	for naming_series, name_data in naming_series_data.items():
 		if not name_data:
 			continue
 
-		sorted_names = sorted(name_data.items(), key=lambda x: x[1])
+		sorted_names = sorted(name_data["document_names"].items(), key=lambda x: x[1])
 		res.append(frappe._dict({
 			"naming_series": naming_series,
 			"nature_of_document": nature_of_document,
 			"from_serial_no": sorted_names[0][0],
 			"to_serial_no": sorted_names[len(sorted_names) - 1][0],
-			"total_number": len(name_data),
-			"canceled": canceled_documents.get(naming_series)
+			"total_number": name_data.get("tot_count"),
+			"canceled": name_data.get("canceled_count")
 		}))
 
 	return res
