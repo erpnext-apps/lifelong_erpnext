@@ -18,7 +18,8 @@ def update_shelf_data(doc, method):
 			is_internal_transfer = True
 
 		if (doc.voucher_type == 'Stock Entry' and
-			frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'purpose') == 'Material Transfer'):
+			frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'purpose') in
+			["Material Transfer", "Manufacture", "Repack"]):
 			is_internal_transfer = True
 
 		if is_internal_transfer and doc.actual_qty > 0:
