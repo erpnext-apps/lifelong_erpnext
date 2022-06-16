@@ -151,9 +151,8 @@ def get_document_summary(filters, document_details, nature_of_document):
 		names = naming_series_data.get(naming_series)
 		if item.docstatus == 2:
 			names["canceled_count"] += 1
-		else:
-			names["document_names"][item.name] = item.creation
 
+		names["document_names"][item.name] = item.creation
 		names["tot_count"] += 1
 
 	res = []
