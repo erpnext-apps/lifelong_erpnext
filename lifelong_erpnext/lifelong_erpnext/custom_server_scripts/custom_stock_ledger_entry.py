@@ -42,7 +42,7 @@ def update_shelf_data(doc, method):
 
 	if not doc.shelf and doc.is_cancelled == 0:
 		has_shelf_ledgers = frappe.get_all('Stock Ledger Entry', fields=['name'],
-			filters = {'item_code': doc.item_code, 'is_cancelled': 0, 'shelf': ['is', 'set']}, limit=1)
+			filters = {'item_code': doc.item_code, 'is_cancelled': 0, 'shelf': ['is', 'set'], 'warehouse': doc.warehouse}, limit=1)
 
 		if has_shelf_ledgers:
 			frappe.throw(_(f'Shelf required for the item {bold(doc.item_code)} and warehouse {bold(doc.warehouse)}'))
