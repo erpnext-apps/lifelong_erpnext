@@ -29,6 +29,6 @@ def execute(filters=None):
 				["valuation_rate", "batch_no"],
 				as_dict = 1
 				)
-			d["valuation_rate"] = batch_value.valuation_rate
-			d["batch"] = batch_value.batch_no
+			d["valuation_rate"] = batch_value.valuation_rate if batch_value and 'valuation_rate' in batch_value else None
+			d["batch"] = batch_value.batch_no if batch_value and 'batch_no' in batch_value else None
 	return columns, data, message, chart, report_summary, skip_total_row
