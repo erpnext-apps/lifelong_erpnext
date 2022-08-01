@@ -13,7 +13,7 @@ def update_shelf_data(doc, method):
 
 	if doctype_mapper.get(doc.voucher_type) and doc.voucher_detail_no and doc.is_cancelled == 0:
 		is_internal_transfer = False
-		if (doc.voucher_type == 'Delivery Note' and
+		if (doc.voucher_type in ["Delivery Note", "Sales Invoice"] and
 			frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'is_internal_customer')):
 			is_internal_transfer = True
 
@@ -39,6 +39,15 @@ def update_shelf_data(doc, method):
 			elif voucher_data.is_return:
 				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
 					doc.voucher_detail_no, 'shelf')
+
+		if (doc.voucher_type in ["Delivery Note", "Sales Invoice"]
+			and doc.is_return and is_internal_transfer):
+			if doc.actual_qty > 0:
+				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+					doc.voucher_detail_no, 'shelf')
+			else:
+				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+					doc.voucher_detail_no, 'target_shelf')
 
 	if not doc.shelf and doc.is_cancelled == 0:
 		has_shelf_ledgers = frappe.get_all('Stock Ledger Entry', fields=['name'],
