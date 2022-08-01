@@ -41,11 +41,14 @@ def update_shelf_data(doc, method):
 					doc.voucher_detail_no, 'shelf')
 
 		if (doc.voucher_type in ["Delivery Note", "Sales Invoice"]
-			and doc.is_return and is_internal_transfer):
-			if doc.actual_qty > 0:
+			and is_internal_transfer):
+			is_return = frappe.db.get_value(doc.voucher_type,
+				doc.voucher_no, "is_return")
+
+			if doc.actual_qty > 0 and is_return:
 				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
 					doc.voucher_detail_no, 'shelf')
-			else:
+			elif is_return:
 				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
 					doc.voucher_detail_no, 'target_shelf')
 
