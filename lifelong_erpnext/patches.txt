@@ -1,1 +1,2 @@
 lifelong_erpnext.custom_patches.patch_to_add_custom_fields #31-03-2022
+lifelong_erpnext.custom_patches.patch_to_add_custom_field_in_pick_list

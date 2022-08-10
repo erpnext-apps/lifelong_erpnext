@@ -16,8 +16,8 @@ class CustomPickList(PickList):
 		items = self.aggregate_item_qty()
 		self.item_location_map = frappe._dict()
 
-		from_warehouses = None
-		if self.parent_warehouse:
+		from_warehouses = [self.child_warehouse]
+		if self.parent_warehouse and not self.child_warehouse:
 			from_warehouses = frappe.db.get_descendants('Warehouse', self.parent_warehouse)
 
 		# Create replica before resetting, to handle empty table on update after submit.
@@ -135,3 +135,20 @@ def get_items_with_location_and_quantity(item_doc, item_location_map, docstatus)
 	# update available locations for the item
 	item_location_map[item_doc.item_code] = available_locations
 	return locations
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def warehouse_query(doctype, txt, searchfield, start, page_len, filters):
+	if filters.get("parent_warehouse"):
+		lft, rgt = frappe.db.get_value("Warehouse", filters.get("parent_warehouse"), ["lft", "rgt"])
+
+		return frappe.get_all(
+			"Warehouse",
+			filters = {"lft": [">", lft], "rgt": ["<", rgt],
+				"company": filters.get("company"), "name": ("like", f"%{txt}%"), "is_group": 0},
+			fields = ["name"],
+			limit_start = start,
+			limit_page_length=page_len,
+			as_list=1
+		)
