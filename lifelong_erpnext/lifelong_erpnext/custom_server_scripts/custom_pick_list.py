@@ -16,7 +16,10 @@ class CustomPickList(PickList):
 		items = self.aggregate_item_qty()
 		self.item_location_map = frappe._dict()
 
-		from_warehouses = [self.child_warehouse]
+		from_warehouses = []
+		if self.child_warehouse:
+			from_warehouses = [self.child_warehouse]
+
 		if self.parent_warehouse and not self.child_warehouse:
 			from_warehouses = frappe.db.get_descendants('Warehouse', self.parent_warehouse)
 
