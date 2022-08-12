@@ -10,6 +10,35 @@ from erpnext.stock.doctype.pick_list.pick_list import (PickList,
 from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils import get_available_batches
 
 class CustomPickList(PickList):
+	def aggregate_item_qty(self):
+		locations = self.get("locations")
+		self.item_count_map = {}
+		# aggregate qty for same item
+		item_map = OrderedDict()
+		for item in locations:
+			if not item.item_code:
+				frappe.throw("Row #{0}: Item Code is Mandatory".format(item.idx))
+			item_code = item.item_code
+			reference = item.sales_order_item or item.material_request_item
+			key = (item_code, item.uom, reference)
+			if item.shelf:
+				key = (item_code, item.uom, reference, item.shelf)
+
+			item.idx = None
+			item.name = None
+
+			if item_map.get(key):
+				item_map[key].qty += item.qty
+				item_map[key].stock_qty += item.stock_qty
+			else:
+				item_map[key] = item
+
+			# maintain count of each item (useful to limit get query)
+			self.item_count_map.setdefault(item_code, 0)
+			self.item_count_map[item_code] += item.stock_qty
+
+		return item_map.values()
+
 	@frappe.whitelist()
 	def set_item_locations(self, save=False):
 		self.validate_for_qty()
@@ -32,7 +61,7 @@ class CustomPickList(PickList):
 			item_code = item_doc.item_code
 
 			self.item_location_map.setdefault(item_code,
-				get_available_item_locations(item_code, from_warehouses, self.item_count_map.get(item_code), self.company))
+				get_available_item_locations(item_code, from_warehouses, self.item_count_map.get(item_code), self.company, item_doc))
 
 			locations = get_items_with_location_and_quantity(item_doc, self.item_location_map, self.docstatus)
 
@@ -44,8 +73,8 @@ class CustomPickList(PickList):
 					'picked_qty': row.stock_qty
 				})
 
-				location = item_doc.as_dict()
-				location.update(row)
+				location = row
+				location.update(item_doc.as_dict())
 				self.append('locations', location)
 
 		# If table is empty on update after submit, set stock_qty, picked_qty to 0 so that indicator is red
@@ -61,7 +90,7 @@ class CustomPickList(PickList):
 		if save:
 			self.save()
 
-def get_available_item_locations(item_code, from_warehouses, required_qty, company, ignore_validation=False):
+def get_available_item_locations(item_code, from_warehouses, required_qty, company, item_doc, ignore_validation=False):
 	locations = []
 	has_serial_no  = frappe.get_cached_value('Item', item_code, 'has_serial_no')
 	has_batch_no = frappe.get_cached_value('Item', item_code, 'has_batch_no')
@@ -71,7 +100,7 @@ def get_available_item_locations(item_code, from_warehouses, required_qty, compa
 	elif has_serial_no:
 		locations = get_available_item_locations_for_serialized_item(item_code, from_warehouses, required_qty, company)
 	elif has_batch_no:
-		locations = get_available_item_locations_for_batched_item(item_code, from_warehouses, required_qty, company)
+		locations = get_available_item_locations_for_batched_item(item_code, from_warehouses, required_qty, company, item_doc)
 	else:
 		locations = get_available_item_locations_for_other_item(item_code, from_warehouses, required_qty, company)
 
@@ -86,8 +115,8 @@ def get_available_item_locations(item_code, from_warehouses, required_qty, compa
 
 	return locations
 
-def get_available_item_locations_for_batched_item(item_code, from_warehouses, required_qty, company):
-	batch_locations = get_available_batches(item_code, from_warehouses, company)
+def get_available_item_locations_for_batched_item(item_code, from_warehouses, required_qty, company, item_doc):
+	batch_locations = get_available_batches(item_code, from_warehouses, company, shelf=item_doc.shelf)
 
 	return batch_locations
 
