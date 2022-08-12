@@ -9,3 +9,8 @@ def execute():
 		label='Child Warehouse', fieldtype='Link', options='Warehouse', depends_on='parent_warehouse')
 
 	create_custom_field("Pick List", df)
+
+	df = dict(fieldname='select_manually', insert_after='child_warehouse',
+		label='Select Shelf Manually', fieldtype='Check')
+
+	create_custom_field("Pick List", df)
