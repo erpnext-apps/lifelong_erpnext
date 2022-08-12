@@ -21,8 +21,6 @@ class CustomPickList(PickList):
 			item_code = item.item_code
 			reference = item.sales_order_item or item.material_request_item
 			key = (item_code, item.uom, reference)
-			if item.shelf:
-				key = (item_code, item.uom, reference, item.shelf)
 
 			item.idx = None
 			item.name = None
@@ -73,8 +71,8 @@ class CustomPickList(PickList):
 					'picked_qty': row.stock_qty
 				})
 
-				location = row
-				location.update(item_doc.as_dict())
+				location = item_doc.as_dict()
+				location.update(row)
 				self.append('locations', location)
 
 		# If table is empty on update after submit, set stock_qty, picked_qty to 0 so that indicator is red
@@ -116,7 +114,7 @@ def get_available_item_locations(item_code, from_warehouses, required_qty, compa
 	return locations
 
 def get_available_item_locations_for_batched_item(item_code, from_warehouses, required_qty, company, item_doc):
-	batch_locations = get_available_batches(item_code, from_warehouses, company, shelf=item_doc.shelf)
+	batch_locations = get_available_batches(item_code, from_warehouses, company)
 
 	return batch_locations
 
