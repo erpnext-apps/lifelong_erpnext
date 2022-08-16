@@ -1,6 +1,25 @@
 frappe.ui.form.on('Pick List', {
     setup(frm) {
-        erpnext.queries.setup_shelf_query(frm);
+
+        frm.set_query('shelf', 'locations', function(doc, cdt, cdn) {
+            var row  = locals[cdt][cdn];
+
+            let warehouse = row.warehouse || row.s_warehouse || row.t_warehouse;
+            let shelf_type = ['Sellable', 'Unsellable'];
+            if (in_list(['Pick List', 'Delivery Note', 'Sales Invoice'], frm.doc.doctype)) {
+                shelf_type = ['Sellable'];
+            }
+
+            if (warehouse) {
+                return {
+                    filters: {
+                        'warehouse': warehouse,
+                        'type': ['in', shelf_type]
+                    }
+                }
+            }
+        });
+
         frm.set_query("child_warehouse", () => {
             return {
                 query:"lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_pick_list.warehouse_query",
