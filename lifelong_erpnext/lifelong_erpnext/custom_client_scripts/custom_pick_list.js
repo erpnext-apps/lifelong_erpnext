@@ -1,5 +1,6 @@
 frappe.ui.form.on('Pick List', {
     setup(frm) {
+        erpnext.queries.setup_shelf_query(frm);
         frm.set_query("child_warehouse", () => {
             return {
                 query:"lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_pick_list.warehouse_query",

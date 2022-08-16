@@ -784,10 +784,16 @@ erpnext.queries.setup_shelf_query = function(frm){
 		var row  = locals[cdt][cdn];
 
 		let warehouse = row.warehouse || row.s_warehouse || row.t_warehouse;
+		let shelf_type = ['Sellable', 'Unsellable'];
+		if (in_list(['Pick List', 'Delivery Note', 'Sales Invoice'], frm.doc.doctype)) {
+			shelf_type = ['Sellable'];
+		}
+
 		if (warehouse) {
 			return {
 				filters: {
-					'warehouse': warehouse
+					'warehouse': warehouse,
+					'type': ['in', shelf_type]
 				}
 			}
 		}
