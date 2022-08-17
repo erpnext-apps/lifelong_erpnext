@@ -119,7 +119,7 @@ frappe.query_reports["Shelf Wise Batch Balance Report"] = {
 			"fieldname":"doctype",
 			"label": __("Doctype"),
 			"fieldtype": "Link",
-			"options": "Doctype"
+			"options": "DocType"
 		},
 	],
 	"formatter": function (value, row, column, data, default_formatter) {
