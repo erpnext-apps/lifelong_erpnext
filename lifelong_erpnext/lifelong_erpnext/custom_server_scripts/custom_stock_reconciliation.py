@@ -262,7 +262,9 @@ def get_stock_balance_for(*args, **kargs):
 	if kargs.shelf:
 		if kargs.batch_no:
 			data = get_available_batches(item_code, warehouse,
-				kargs.company, batch_no=kargs.batch_no, shelf=kargs.shelf, posting_time=posting_time)
+				kargs.company, doctype="Stock Reconciliation",
+				batch_no=kargs.batch_no, shelf=kargs.shelf, posting_time=posting_time)
+
 			if data:
 				return data[0]
 		else:

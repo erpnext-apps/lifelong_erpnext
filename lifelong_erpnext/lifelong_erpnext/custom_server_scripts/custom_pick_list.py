@@ -117,7 +117,7 @@ def get_available_item_locations(item_code, from_warehouses, required_qty, compa
 	return locations
 
 def get_available_item_locations_for_batched_item(item_code, from_warehouses, required_qty, company, item_doc):
-	batch_locations = get_available_batches(item_code, from_warehouses, company)
+	batch_locations = get_available_batches(item_code, from_warehouses, company, doctype="Pick List")
 
 	return batch_locations
 

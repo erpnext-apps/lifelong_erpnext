@@ -318,7 +318,8 @@ erpnext.SerialNoBatchSelector = class SerialNoBatchSelector {
 					item_code: dialog_data['item_code'],
 					warehouse: dialog_data['warehouse'],
                     company: me.frm.doc.company,
-                    qty: dialog_data['qty']
+					qty: dialog_data['qty'],
+					doctype: me.frm.doc.doctype
 				},
 				callback: function(r) {
 					me.batch_data = r.message || [];

@@ -151,17 +151,21 @@ def get_conditions(filters):
 # get all details
 def get_stock_ledger_entries(filters):
 	conditions = get_conditions(filters)
+	shelf_type_cond = ""
+	if filters.get("doctype") and filters.get("doctype") in ['Pick List', 'Delivery Note', 'Sales Invoice']:
+		shelf_type_cond = " and sle.shelf in (select name from `tabShelf` where type = 'Sellable')"
+
 	return frappe.db.sql(f"""
 		SELECT
 			sle.item_code, sle.batch_no, sle.warehouse, sle.posting_date,
 			sum(sle.actual_qty) as qty, sle.shelf, DATE_FORMAT(batch.creation, '%Y-%m-%d %H:%i:%s') as creation,
 			batch.item_name, batch.description, batch.stock_uom, sle.valuation_rate
 		FROM
-			`tabStock Ledger Entry` sle, `tabBatch` batch
+	 		`tabStock Ledger Entry` sle, `tabBatch` batch
 		WHERE
 			sle.is_cancelled = 0 and sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' {conditions}
 			and batch.name = sle.batch_no and IFNULL(batch.`expiry_date`, '2200-01-01') > '{nowdate()}'
-			and sle.shelf is not null
+			and sle.shelf is not null {shelf_type_cond}
 		GROUP BY
 			sle.voucher_no, sle.batch_no, sle.item_code, sle.warehouse, sle.shelf
 		ORDER BY
