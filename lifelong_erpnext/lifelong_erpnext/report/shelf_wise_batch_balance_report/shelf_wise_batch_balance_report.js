@@ -46,31 +46,10 @@ frappe.query_reports["Shelf Wise Batch Balance Report"] = {
 			"label": __("Warehouse"),
 			"fieldtype": "MultiSelectList",
 			"options": "Warehouse",
-			get_data: function() {
-				var cost_centers = frappe.query_report.get_filter_value("Warehouse") || "";
-
-				const values = cost_centers.split(/\s*,\s*/).filter(d => d);
-				const txt = cost_centers.match(/[^,\s*]*$/)[0] || '';
-				let data = [];
-
-				frappe.call({
-					type: "GET",
-					method:'frappe.desk.search.search_link',
-					async: false,
-					no_spinner: true,
-					args: {
-						doctype: "Warehouse",
-						txt: txt,
-						filters: {
-							"company": frappe.query_report.get_filter_value("company"),
-							"name": ["not in", values]
-						}
-					},
-					callback: function(r) {
-						data = r.results;
-					}
+			get_data: function(txt) {
+				return frappe.db.get_link_options('Warehouse', txt, {
+					"company": frappe.query_report.get_filter_value("company")
 				});
-				return data;
 			},
 			"get_query": function() {
 				let company = frappe.query_report.get_filter_value('company');
