@@ -23,8 +23,7 @@ def execute(filters=None):
 
 	iwb_map = sorted(iwb_map.items(), key= lambda x: (x[1].get('creation'), x[1].get('bal_qty')))
 	for row in iwb_map:
-		if row[1].bal_qty > 0.0:
-			data.append(row[1])
+		data.append(row[1])
 
 	return columns, data
 
