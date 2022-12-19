@@ -23,7 +23,10 @@ def execute(filters=None):
 
 	iwb_map = sorted(iwb_map.items(), key= lambda x: (x[1].get('creation'), x[1].get('bal_qty')))
 	for row in iwb_map:
-		data.append(row[1])
+		if not filters.get("show_zero_and_negative_stock") and row[1].bal_qty > 0.0:
+			data.append(row[1])
+		elif filters.get("show_zero_and_negative_stock"):
+			data.append(row[1])
 
 	return columns, data
 

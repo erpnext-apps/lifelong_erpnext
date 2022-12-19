@@ -100,6 +100,11 @@ frappe.query_reports["Shelf Wise Batch Balance Report"] = {
 			"fieldtype": "Link",
 			"options": "DocType"
 		},
+		{
+			"fieldname":"show_zero_and_negative_stock",
+			"label": __("Show Zero and Negative Stock"),
+			"fieldtype": "Check"
+		},
 	],
 	"formatter": function (value, row, column, data, default_formatter) {
 		if (column.fieldname == "Batch" && data && !!data["Batch"]) {
