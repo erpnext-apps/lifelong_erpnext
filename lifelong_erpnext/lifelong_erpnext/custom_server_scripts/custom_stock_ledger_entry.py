@@ -11,6 +11,13 @@ def update_shelf_data(doc, method):
 		'Sales Invoice': 'Sales Invoice Item',
 	}
 
+	if doc.voucher_type == 'Subcontracting Receipt' and doc.is_cancelled == 0:
+		if doc.actual_qty > 0:
+			doc.shelf = frappe.db.get_value('Subcontracting Receipt Item', doc.voucher_detail_no, 'shelf')
+		else:
+			doc.shelf = frappe.db.get_value('Subcontracting Receipt Supplied Item',
+				doc.voucher_detail_no, 'shelf')
+
 	if doctype_mapper.get(doc.voucher_type) and doc.voucher_detail_no and doc.is_cancelled == 0:
 		is_internal_transfer = False
 		if (doc.voucher_type in ["Delivery Note", "Sales Invoice"] and
