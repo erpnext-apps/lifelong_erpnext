@@ -97,7 +97,7 @@ app_include_js = ["/assets/lifelong_erpnext/js/serial_no_batch_selector.js", "/a
 
 override_doctype_class = {
 	"Putaway Rule": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_putaway_rule.CustomPutawayRule",
-    "Purchase Receipt": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockController",
+	"Purchase Receipt": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockController",
 	"Stock Entry": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_controller.CustomStockEntry",
 	"Pick List": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_pick_list.CustomPickList",
 	"Stock Reconciliation": "lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_reconciliation.CustomStockReconciliation"
@@ -124,7 +124,7 @@ doctype_js = {
 	"Delivery Note" : "lifelong_erpnext/custom_client_scripts/custom_delivery_note.js",
 	"Purchase Receipt" : "lifelong_erpnext/custom_client_scripts/custom_purchase_receipt.js",
 	"Stock Entry" : "lifelong_erpnext/custom_client_scripts/custom_stock_entry.js",
-	"Pick List" : "lifelong_erpnext/custom_client_scripts/custom_pick_list.js"
+	#"Pick List" : "lifelong_erpnext/custom_client_scripts/custom_pick_list.js"
 }
 
 # Scheduled Tasks

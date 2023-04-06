@@ -70,11 +70,9 @@ class CustomPickList(PickList):
 			item_doc.name = None
 
 			for row in locations:
-				if self.business_type != "B2C":
-					row.update({
-						'picked_qty': row.stock_qty
-					})
-
+				row.update({
+					'picked_qty': row.stock_qty
+				})
 				location = item_doc.as_dict()
 				location.update(row)
 				self.append('locations', location)
