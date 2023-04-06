@@ -124,7 +124,7 @@ doctype_js = {
 	"Delivery Note" : "lifelong_erpnext/custom_client_scripts/custom_delivery_note.js",
 	"Purchase Receipt" : "lifelong_erpnext/custom_client_scripts/custom_purchase_receipt.js",
 	"Stock Entry" : "lifelong_erpnext/custom_client_scripts/custom_stock_entry.js",
-	#"Pick List" : "lifelong_erpnext/custom_client_scripts/custom_pick_list.js"
+	"Pick List" : "lifelong_erpnext/custom_client_scripts/custom_pick_list.js"
 }
 
 # Scheduled Tasks
