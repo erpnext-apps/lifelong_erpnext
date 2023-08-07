@@ -1,6 +1,6 @@
 import frappe
 from frappe.utils import nowdate, flt
-from lifelong_erpnext.lifelong_erpnext.report.shelf_wise_batch_balance_report.shelf_wise_batch_balance_report import execute
+from lifelong_erpnext.lifelong_erpnext.report.shelf_wise_batch_balance_report.shelf_wise_batch_balance_report import get_available_shelf_batches
 
 def get_stock_balance(args, operator=None,
 	order="desc", limit=None, for_update=False, debug=False, check_serial_no=True):
@@ -62,13 +62,14 @@ def get_available_batches(item_code, warehouse, company, qty=0, doctype=None,
 		'to_date': nowdate(),
 		'batch_no': batch_no,
 		'shelf': shelf,
-		'doctype': doctype
+		'doctype': doctype,
+		'group_by_batch': 1
 	})
 
 	if posting_time:
 		filters.posting_time = posting_time
 
-	columns, data = execute(filters)
+	data = get_available_shelf_batches(filters)
 
 	if not qty:
 		return data
