@@ -27,8 +27,6 @@ def get_available_shelf_batches(filters, float_precision=None):
 	iwb_map = get_item_warehouse_batch_map(filters, float_precision)
 
 	data = []
-
-	iwb_map = sorted(iwb_map.items(), key= lambda x: (x[1].get('creation'), x[1].get('bal_qty')))
 	for row in iwb_map:
 		if not filters.get("show_zero_and_negative_stock") and row[1].bal_qty > 0.0:
 			data.append(row[1])
@@ -179,6 +177,7 @@ def get_stock_ledger_entries(filters):
 			and batch.name = sle.batch_no and IFNULL(batch.`expiry_date`, '2200-01-01') > '{nowdate()}'
 			and sle.shelf is not null {shelf_type_cond}
 		{group_by}
+		HAVING qty != 0
 		ORDER BY
 			sle.item_code, sle.warehouse, batch.creation, qty""", as_dict=1)
 
