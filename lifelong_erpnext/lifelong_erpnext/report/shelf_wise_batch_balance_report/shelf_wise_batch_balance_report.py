@@ -16,7 +16,14 @@ def execute(filters=None):
 	float_precision = cint(frappe.db.get_default("float_precision")) or 3
 
 	columns = get_columns(filters)
-	item_map = get_item_details(filters)
+	data = get_available_shelf_batches(filters, float_precision)
+
+	return columns, data
+
+def get_available_shelf_batches(filters, float_precision=None):
+	if not float_precision:
+		float_precision = cint(frappe.db.get_default("float_precision")) or 3
+
 	iwb_map = get_item_warehouse_batch_map(filters, float_precision)
 
 	data = []
@@ -28,8 +35,7 @@ def execute(filters=None):
 		elif filters.get("show_zero_and_negative_stock"):
 			data.append(row[1])
 
-	return columns, data
-
+	return data
 
 def get_columns(filters):
 	"""return columns based on filters"""
@@ -157,6 +163,10 @@ def get_stock_ledger_entries(filters):
 	if filters.get("doctype") and filters.get("doctype") in ['Pick List', 'Delivery Note', 'Sales Invoice']:
 		shelf_type_cond = " and sle.shelf in (select name from `tabShelf` where type = 'Sellable')"
 
+	group_by = "GROUP BY sle.voucher_no, sle.batch_no, sle.item_code, sle.warehouse, sle.shelf"
+	if filters.get("group_by_batch"):
+		group_by = "GROUP BY sle.item_code, sle.warehouse, sle.batch_no, sle.shelf"
+
 	return frappe.db.sql(f"""
 		SELECT
 			sle.item_code, sle.batch_no, sle.warehouse, sle.posting_date,
@@ -168,8 +178,7 @@ def get_stock_ledger_entries(filters):
 			sle.is_cancelled = 0 and sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' {conditions}
 			and batch.name = sle.batch_no and IFNULL(batch.`expiry_date`, '2200-01-01') > '{nowdate()}'
 			and sle.shelf is not null {shelf_type_cond}
-		GROUP BY
-			sle.voucher_no, sle.batch_no, sle.item_code, sle.warehouse, sle.shelf
+		{group_by}
 		ORDER BY
 			sle.item_code, sle.warehouse, batch.creation, qty""", as_dict=1)
 
