@@ -22,8 +22,12 @@ def execute(filters=None):
 
 def get_available_shelf_batches(filters, float_precision=None):
 	data = []
+	warehouse = filters.get("warehouse")
+	if warehouse and len(warehouse) > 1:
+		warehouse = warehouse[0]
+
 	if filters.get("get_from_cache"):
-		key = (filters.get("item_code"), filters.get("warehouse")[0])
+		key = (filters.get("item_code"), warehouse)
 		if hasattr(frappe.local, "available_shelf_data"):
 			data = frappe.local.available_shelf_data.get(key) or []
 
@@ -41,8 +45,8 @@ def get_available_shelf_batches(filters, float_precision=None):
 		elif filters.get("show_zero_and_negative_stock"):
 			data.append(row)
 
-	if filters.get("get_from_cache"):
-		key = (filters.get("item_code"), filters.get("warehouse")[0])
+	if warehouse and filters.get("get_from_cache"):
+		key = (filters.get("item_code"), warehouse)
 		if not hasattr(frappe.local, "available_shelf_data"):
 			frappe.local.available_shelf_data = {}
 
