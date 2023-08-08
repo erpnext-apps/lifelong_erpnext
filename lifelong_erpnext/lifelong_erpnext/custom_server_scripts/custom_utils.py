@@ -63,7 +63,8 @@ def get_available_batches(item_code, warehouse, company, qty=0, doctype=None,
 		'batch_no': batch_no,
 		'shelf': shelf,
 		'doctype': doctype,
-		'group_by_batch': 1
+		'group_by_batch': 1,
+		"get_from_cache": 1
 	})
 
 	if posting_time:
