@@ -134,7 +134,7 @@ def get_items_with_location_and_quantity(item_doc, item_location_map, docstatus)
 		stock_qty = remaining_stock_qty if item_location.qty >= remaining_stock_qty else item_location.qty
 		qty = stock_qty / (item_doc.conversion_factor or 1)
 
-		uom_must_be_whole_number = frappe.db.get_value('UOM', item_doc.uom, 'must_be_whole_number')
+		uom_must_be_whole_number = frappe.get_cached_value('UOM', item_doc.uom, 'must_be_whole_number')
 		if uom_must_be_whole_number:
 			qty = floor(qty)
 			stock_qty = qty * item_doc.conversion_factor
