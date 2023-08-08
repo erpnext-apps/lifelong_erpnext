@@ -21,17 +21,32 @@ def execute(filters=None):
 	return columns, data
 
 def get_available_shelf_batches(filters, float_precision=None):
+	data = []
+	if filters.get("get_from_cache"):
+		key = (filters.get("item_code"), filters.get("warehouse"))
+		if hasattr(frappe.local, "available_shelf_data"):
+			data = frappe.local.available_shelf_data.get(key)
+
+		if data:
+			return data
+
 	if not float_precision:
 		float_precision = cint(frappe.db.get_default("float_precision")) or 3
 
 	iwb_map = get_item_warehouse_batch_map(filters, float_precision)
 
-	data = []
 	for key, row in iwb_map.items():
 		if not filters.get("show_zero_and_negative_stock") and row.bal_qty > 0.0:
 			data.append(row)
 		elif filters.get("show_zero_and_negative_stock"):
 			data.append(row)
+
+	if filters.get("get_from_cache"):
+		key = (filters.get("item_code"), filters.get("warehouse"))
+		if not hasattr(frappe.local, "available_shelf_data"):
+			frappe.local.available_shelf_data = {}
+
+		frappe.local.available_shelf_data[key] = data
 
 	return data
 
