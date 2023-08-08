@@ -27,11 +27,11 @@ def get_available_shelf_batches(filters, float_precision=None):
 	iwb_map = get_item_warehouse_batch_map(filters, float_precision)
 
 	data = []
-	for row in iwb_map:
-		if not filters.get("show_zero_and_negative_stock") and row[1].bal_qty > 0.0:
-			data.append(row[1])
+	for key, row in iwb_map.items():
+		if not filters.get("show_zero_and_negative_stock") and row.bal_qty > 0.0:
+			data.append(row)
 		elif filters.get("show_zero_and_negative_stock"):
-			data.append(row[1])
+			data.append(row)
 
 	return data
 
