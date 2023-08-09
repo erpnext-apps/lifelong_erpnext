@@ -46,6 +46,9 @@ def get_available_shelf_batches(filters, float_precision=None):
 			data.append(row)
 
 	if warehouse and filters.get("get_from_cache"):
+		if warehouse and len(warehouse) > 1:
+			warehouse = warehouse[0]
+
 		key = (filters.get("item_code"), warehouse)
 		if not hasattr(frappe.local, "available_shelf_data"):
 			frappe.local.available_shelf_data = {}
