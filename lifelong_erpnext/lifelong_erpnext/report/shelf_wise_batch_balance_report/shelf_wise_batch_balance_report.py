@@ -39,7 +39,11 @@ def get_available_shelf_batches(filters, float_precision=None):
 
 	iwb_map = get_item_warehouse_batch_map(filters, float_precision)
 
+	shelf_type = get_shelf_type()
 	for key, row in iwb_map.items():
+		if row.shelf:
+			row.shelf_type = shelf_type.get(row.shelf)
+
 		if not filters.get("show_zero_and_negative_stock") and row.bal_qty > 0.0:
 			data.append(row)
 		elif filters.get("show_zero_and_negative_stock"):
@@ -56,6 +60,15 @@ def get_available_shelf_batches(filters, float_precision=None):
 		frappe.local.available_shelf_data.setdefault(key, data)
 
 	return data
+
+def get_shelf_type():
+	if not hasattr(frappe.local, "shelf_type"):
+		frappe.local.shelf_type = frappe._dict(frappe.get_all("Shelf",
+			fields=["distinct name", "type"],
+			as_list=1
+		))
+
+	return frappe.local.shelf_type
 
 def get_columns(filters):
 	"""return columns based on filters"""
@@ -93,6 +106,12 @@ def get_columns(filters):
 			'fieldtype': 'Link',
 			'label': 'Shelf',
 			'options': 'Shelf',
+			'width': 100
+		},
+		{
+			'fieldname': 'shelf_type',
+			'fieldtype': 'Data',
+			'label': 'Shelf Type',
 			'width': 100
 		},
 		{
