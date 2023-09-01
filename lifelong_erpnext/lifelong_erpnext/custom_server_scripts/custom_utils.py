@@ -51,8 +51,14 @@ def get_stock_balance(args, operator=None,
 
 @frappe.whitelist()
 def get_available_batches(item_code, warehouse, company, qty=0, doctype=None,
-	batch_no=None, shelf=None, posting_time=None):
+	batch_no=None, shelf=None, posting_time=None, group_by_batch=None, get_from_cache=None):
 	qty = flt(qty)
+
+	if get_from_cache is None:
+		get_from_cache = True
+
+	if group_by_batch is None:
+		group_by_batch = True
 
 	filters = frappe._dict({
 		'item_code': item_code,
@@ -63,8 +69,8 @@ def get_available_batches(item_code, warehouse, company, qty=0, doctype=None,
 		'batch_no': batch_no,
 		'shelf': shelf,
 		'doctype': doctype,
-		'group_by_batch': 1,
-		"get_from_cache": 1
+		'group_by_batch': group_by_batch,
+		"get_from_cache": get_from_cache
 	})
 
 	if posting_time:
