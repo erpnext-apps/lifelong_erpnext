@@ -85,7 +85,8 @@ def validate_shelf_data(doc):
 		return
 
 	data = get_available_batches(doc.item_code, doc.warehouse, doc.company,
-		doctype=doc.doctype, batch_no=doc.batch_no, shelf=doc.shelf)
+		doctype=doc.doctype, batch_no=doc.batch_no,
+		shelf=doc.shelf, group_by_batch=False, get_from_cache=False)
 
 	if not data:
 		msg = (f'''The stock not exists for the item {bold(doc.item_code)} and batch {bold(doc.batch_no)}
