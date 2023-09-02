@@ -23,7 +23,7 @@ def execute(filters=None):
 def get_available_shelf_batches(filters, float_precision=None):
 	data = []
 	warehouse = filters.get("warehouse")
-	if warehouse and len(warehouse) > 1:
+	if warehouse and isinstance(warehouse, list):
 		warehouse = warehouse[0]
 
 	if filters.get("get_from_cache"):
@@ -50,7 +50,7 @@ def get_available_shelf_batches(filters, float_precision=None):
 			data.append(row)
 
 	if warehouse and filters.get("get_from_cache"):
-		if warehouse and len(warehouse) > 1:
+		if warehouse and isinstance(warehouse, list):
 			warehouse = warehouse[0]
 
 		key = (filters.get("item_code"), warehouse)
