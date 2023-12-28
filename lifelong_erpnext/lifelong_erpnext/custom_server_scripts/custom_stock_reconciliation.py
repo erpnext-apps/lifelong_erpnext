@@ -19,9 +19,9 @@ class CustomStockReconciliation(StockReconciliation):
 			item_dict = get_stock_balance_for(item.item_code, item.warehouse,
 				self.posting_date, self.posting_time, batch_no=item.batch_no,
 				shelf=item.shelf, company=self.company, with_valuation_rate=True)
-			if ((item.shelf  is None or  (item.shelf   == item_dict.get("shelf")))
+			if ((item.shelf  is None or  (item.shelf == item_dict.get("shelf")))
 				and
-				(item.material_state is None or  (item.material_state ==  item.custom_material_state))
+				(item.material_state is None or  (item.material_state ==  item_dict.get("material_state")))
 			):
 				return False
 			if ((
