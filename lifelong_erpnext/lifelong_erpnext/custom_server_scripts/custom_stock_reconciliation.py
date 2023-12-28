@@ -29,6 +29,10 @@ class CustomStockReconciliation(StockReconciliation):
 				) and
 				(
 					not item.serial_no or (item.serial_no == item_dict.get("serial_nos"))
+				)
+				and
+				(
+					item.material_state is None or  (item.material_state == item.custom_material_state)
 				)):
 				return False
 			else:
