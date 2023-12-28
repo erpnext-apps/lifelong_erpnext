@@ -19,7 +19,12 @@ class CustomStockReconciliation(StockReconciliation):
 			item_dict = get_stock_balance_for(item.item_code, item.warehouse,
 				self.posting_date, self.posting_time, batch_no=item.batch_no,
 				shelf=item.shelf, company=self.company, with_valuation_rate=True)
-
+			if (
+				(item.shelf  is None or  (item.shelf   == item_dict.get("shelf")))
+				and
+				(item.material_state is None or  (item.material_state ==  item.custom_material_state))
+			):
+				return False
 			if ((
 					item.qty is None or item.qty==item_dict.get("qty")) and
 				(
@@ -30,10 +35,6 @@ class CustomStockReconciliation(StockReconciliation):
 				(
 					not item.serial_no or (item.serial_no == item_dict.get("serial_nos"))
 				)
-				and
-				(
-					item.material_state is None or  (item.material_state == item.custom_material_state)
-				)):
 				return False
 			else:
 				# set default as current rates
