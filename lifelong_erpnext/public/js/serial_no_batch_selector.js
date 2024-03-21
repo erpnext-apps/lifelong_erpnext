@@ -787,7 +787,7 @@ erpnext.queries.setup_shelf_query = function(frm){
 		let warehouse = row.warehouse || row.s_warehouse || row.t_warehouse;
 		let shelf_type = ['Sellable', 'Unsellable'];
 		if (in_list(['Pick List', 'Delivery Note', 'Sales Invoice'], frm.doc.doctype)) {
-			shelf_type = ['Sellable'];
+			shelf_type = ['Sellable', "Dock"];
 		}
 
 		if (warehouse) {

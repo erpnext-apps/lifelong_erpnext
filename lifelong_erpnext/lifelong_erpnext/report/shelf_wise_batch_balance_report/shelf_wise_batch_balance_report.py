@@ -200,7 +200,7 @@ def get_stock_ledger_entries(filters):
 	conditions = get_conditions(filters)
 	shelf_type_cond = ""
 	if filters.get("doctype") and filters.get("doctype") in ['Pick List', 'Delivery Note', 'Sales Invoice']:
-		shelf_type_cond = " and sle.shelf in (select name from `tabShelf` where type = 'Sellable')"
+		shelf_type_cond = " and sle.shelf in (select name from `tabShelf` where type in ('Sellable', 'Dock') )"
 
 	group_by = "GROUP BY sle.voucher_no, sle.batch_no, sle.item_code, sle.warehouse, sle.shelf"
 	if filters.get("group_by_batch"):
