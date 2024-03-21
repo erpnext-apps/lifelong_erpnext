@@ -770,7 +770,6 @@ function calc_total_selected_qty(me) {
 	return totalSelectedQty;
 }
 
-
 function check_can_calculate_pending_qty(me) {
 	const { frm: { doc }, item } = me;
 	const docChecks = doc.bom_no
