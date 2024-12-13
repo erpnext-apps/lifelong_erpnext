@@ -1,7 +1,7 @@
 import frappe
 import json
 from erpnext.stock.doctype.putaway_rule.putaway_rule import (
-	add_row, show_unassigned_items_message, get_serial_nos_to_allocate, PutawayRule
+	add_row, show_unassigned_items_message, PutawayRule
 )
 
 import copy
@@ -205,12 +205,36 @@ def get_ordered_putaway_rules(item_code, company, source_warehouse=None):
 
 	return False, vacant_rules
 
-def add_row(item, to_allocate, warehouse, updated_table, rule=None, serial_nos=None, shelf=None):
+# def add_row(item, to_allocate, warehouse, updated_table, rule=None, serial_nos=None, shelf=None):
+# 	new_updated_table_row = copy.deepcopy(item)
+# 	new_updated_table_row.idx = 1 if not updated_table else cint(updated_table[-1].idx) + 1
+# 	new_updated_table_row.name = None
+# 	new_updated_table_row.qty = to_allocate
+# 	new_updated_table_row.shelf = shelf
+
+# 	if item.doctype == "Stock Entry Detail":
+# 		new_updated_table_row.t_warehouse = warehouse
+# 		new_updated_table_row.transfer_qty = flt(to_allocate) * flt(new_updated_table_row.conversion_factor)
+# 	else:
+# 		new_updated_table_row.stock_qty = flt(to_allocate) * flt(new_updated_table_row.conversion_factor)
+# 		new_updated_table_row.warehouse = warehouse
+# 		new_updated_table_row.rejected_qty = 0
+# 		new_updated_table_row.received_qty = to_allocate
+
+# 	if rule:
+# 		new_updated_table_row.putaway_rule = rule
+# 	# if serial_nos:
+# 	# 	new_updated_table_row.serial_no = get_serial_nos_to_allocate(serial_nos, to_allocate)
+
+# 	updated_table.append(new_updated_table_row)
+# 	return updated_table
+
+
+def add_row(item, to_allocate, warehouse, updated_table, rule=None):
 	new_updated_table_row = copy.deepcopy(item)
 	new_updated_table_row.idx = 1 if not updated_table else cint(updated_table[-1].idx) + 1
 	new_updated_table_row.name = None
 	new_updated_table_row.qty = to_allocate
-	new_updated_table_row.shelf = shelf
 
 	if item.doctype == "Stock Entry Detail":
 		new_updated_table_row.t_warehouse = warehouse
@@ -223,12 +247,11 @@ def add_row(item, to_allocate, warehouse, updated_table, rule=None, serial_nos=N
 
 	if rule:
 		new_updated_table_row.putaway_rule = rule
-	if serial_nos:
-		new_updated_table_row.serial_no = get_serial_nos_to_allocate(serial_nos, to_allocate)
+
+	new_updated_table_row.serial_and_batch_bundle = ""
 
 	updated_table.append(new_updated_table_row)
 	return updated_table
-
 def show_unassigned_items_message(items_not_accomodated):
 	msg = _("The following Items, having Putaway Rules, could not be accomodated:") + "<br><br>"
 	formatted_item_rows = ""
