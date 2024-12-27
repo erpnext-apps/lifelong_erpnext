@@ -60,10 +60,9 @@ def update_shelf_data(doc, method):
 					doc.voucher_detail_no, 'target_shelf')
 
 	if not doc.shelf and doc.is_cancelled == 0:
-		has_shelf_ledgers = frappe.get_all('Stock Ledger Entry', fields=['name'],
-			filters = {'item_code': doc.item_code, 'is_cancelled': 0, 'shelf': ['is', 'set'], 'warehouse': doc.warehouse}, limit=1)
+		is_shelf_reqd = frappe.get_cached_value("Warehouse", doc.warehouse, "has_shelf")
 
-		if has_shelf_ledgers and frappe.session.user != "harsha.vardhana@lifelongonline.com":
+		if is_shelf_reqd and frappe.session.user != "harsha.vardhana@lifelongonline.com":
 			frappe.throw(_(f'Shelf required for the item {bold(doc.item_code)} and warehouse {bold(doc.warehouse)}'))
 
 	if not doc.batch_no or doc.voucher_type == 'Stock Reconciliation':
