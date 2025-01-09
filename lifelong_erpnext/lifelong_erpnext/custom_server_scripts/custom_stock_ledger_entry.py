@@ -65,7 +65,7 @@ def update_shelf_data(doc, method):
 		if is_shelf_reqd and frappe.session.user != "harsha.vardhana@lifelongonline.com":
 			frappe.throw(_(f'Shelf required for the item {bold(doc.item_code)} and warehouse {bold(doc.warehouse)}'))
 
-	if not doc.batch_no or doc.voucher_type == 'Stock Reconciliation':
+	if (not doc.batch_no and not doc.serial_and_batch_bundle) or doc.voucher_type == 'Stock Reconciliation':
 		return
 
 	if doc.shelf and doc.is_cancelled == 0:
@@ -82,25 +82,36 @@ def validate_shelf_data(doc):
 
 	if doc.actual_qty > 0:
 		return
+	batches = {}
+	if doc.batch_no:
+		batches.setdefault(doc.batch_no, 0)
+		batches[doc.batch_no] += doc.actual_qty
+	elif doc.serial_and_batch_bundle:
+		entries = frappe.db.get_all("Serial and Batch Entry", filters = {"parent": doc.serial_and_batch_bundle}, fields = ["*"])
+		for entry in entries:
+			if not entry.get("batch_no") or not entry.get("qty"):
+				continue
+			batches.setdefault(entry.batch_no, 0)
+			batches[entry.batch_no] += entry.qty
+	for batch in batches:
+		data = get_available_batches(doc.item_code, doc.warehouse, doc.company,
+			doctype=doc.doctype, batch_no=batch,
+			shelf=doc.shelf, group_by_batch=False, get_from_cache=False)
 
-	data = get_available_batches(doc.item_code, doc.warehouse, doc.company,
-		doctype=doc.doctype, batch_no=doc.batch_no,
-		shelf=doc.shelf, group_by_batch=False, get_from_cache=False)
-
-	if not data:
-		msg = (f'''The stock not exists for the item {bold(doc.item_code)} and batch {bold(doc.batch_no)}
-			in the shelf {bold(doc.shelf)} for the warehouse {bold(doc.warehouse)}. <br><br>
-			Either you need to increase the stock in the respective shelf and warehouse to complete
-			this entry or select the different batch and shelf which has the sufficient stock.''')
-
-		frappe.throw(_(msg), title= _('Insufficient Stock Error'))
-
-	for row in data:
-		if (row.qty + doc.actual_qty) < 0:
-			msg = (f'''The stock becomes negative as {(row.qty + doc.actual_qty)} for the item
-				{bold(doc.item_code)} in the warehouse {bold(doc.warehouse)} for the shelf {bold(doc.shelf)}
-				after this entry. <br><br>
+		if not data:
+			msg = (f'''The stock not exists for the item {bold(doc.item_code)} and batch {bold(batch)}
+				in the shelf {bold(doc.shelf)} for the warehouse {bold(doc.warehouse)}. <br><br>
 				Either you need to increase the stock in the respective shelf and warehouse to complete
 				this entry or select the different batch and shelf which has the sufficient stock.''')
 
 			frappe.throw(_(msg), title= _('Insufficient Stock Error'))
+
+		for row in data:
+			if (row.qty + batches[batch]) < 0:
+				msg = (f'''The stock becomes negative as {(row.qty + batches[batch])} for the item
+					{bold(doc.item_code)} in the warehouse {bold(doc.warehouse)} in batch {bold(batch)} for the shelf {bold(doc.shelf)}
+					after this entry. <br><br>
+					Either you need to increase the stock in the respective shelf and warehouse to complete
+					this entry or select the different batch and shelf which has the sufficient stock.''')
+
+				frappe.throw(_(msg), title= _('Insufficient Stock Error'))

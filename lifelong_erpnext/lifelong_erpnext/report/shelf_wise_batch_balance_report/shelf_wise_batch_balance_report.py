@@ -169,28 +169,28 @@ def get_conditions(filters):
 		frappe.throw(_("'From Date' is required"))
 
 	if filters.get("to_date") and filters.get("posting_time"):
-		conditions += f""" and timestamp(posting_date, posting_time)
+		conditions += f""" and timestamp(sle.posting_date, sle.posting_time)
 			<= timestamp('{filters["to_date"]}', '{filters.get("posting_time")}')"""
 
 	elif filters.get("to_date"):
-		conditions += " and posting_date <= '%s'" % filters["to_date"]
+		conditions += " and sle.posting_date <= '%s'" % filters["to_date"]
 
 	else:
 		frappe.throw(_("'To Date' is required"))
 
-	for field in ["item_code", "batch_no", "company", "shelf"]:
+	for field in ["item_code", "company", "shelf"]:
 		if filters.get(field):
-			conditions += " and {0} = {1}".format(field, frappe.db.escape(filters.get(field)))
+			conditions += " and sle.{0} = {1}".format(field, frappe.db.escape(filters.get(field)))
 
 	if filters.get('warehouse'):
 		if isinstance(filters.get('warehouse'), str):
-			conditions += f" and warehouse = {frappe.db.escape(filters.get('warehouse'))}"
+			conditions += f" and sle.warehouse = {frappe.db.escape(filters.get('warehouse'))}"
 		else:
 			warehouses = filters.get('warehouse')
 			if len(warehouses) == 1:
 				warehouses.append("All")
 
-			conditions += f" and warehouse in {tuple(warehouses)}"
+			conditions += f" and sle.warehouse in {tuple(warehouses)}"
 
 	return conditions
 
@@ -198,6 +198,8 @@ def get_conditions(filters):
 # get all details
 def get_stock_ledger_entries(filters):
 	conditions = get_conditions(filters)
+	if filters.get("batch_no"):
+		conditions += " and sle.batch_no = {} ".format(frappe.db.escape(filters.get("batch_no")))
 	shelf_type_cond = ""
 	if filters.get("doctype") and filters.get("doctype") in ['Pick List', 'Delivery Note', 'Sales Invoice']:
 		shelf_type_cond = " and sle.shelf in (select name from `tabShelf` where type in ('Sellable', 'Dock') )"
@@ -222,9 +224,54 @@ def get_stock_ledger_entries(filters):
 		ORDER BY
 			sle.item_code, sle.warehouse, batch.creation, qty""", as_dict=1)
 
+def get_stock_from_batch_bundle(filters):
+	conditions = get_conditions(filters)
+	if filters.get("batch_no"):
+		conditions += " and batch_bundle.batch_no = {}".format(frappe.db.escape(filters.get("batch_no")))
+	shelf_type_cond = ""
+	if filters.get("doctype") and filters.get("doctype") in ['Pick List', 'Delivery Note', 'Sales Invoice']:
+		shelf_type_cond = " and sle.shelf in (select name from `tabShelf` where type in ('Sellable', 'Dock') )"
+
+	group_by = "GROUP BY sle.voucher_no, batch_bundle.batch_no, sle.item_code, sle.warehouse, sle.shelf"
+	if filters.get("group_by_batch"):
+		group_by = "GROUP BY sle.item_code, sle.warehouse, batch_bundle.batch_no, sle.shelf"
+
+	return frappe.db.sql(f"""
+		SELECT
+			sle.item_code,
+			batch_bundle.batch_no,
+			sle.warehouse,
+			sle.posting_date,
+			sum(batch_bundle.qty) as qty,
+			sle.shelf,
+			DATE_FORMAT(batch.creation, '%Y-%m-%d %H:%i:%s') as creation,
+			batch.item_name,
+			batch.description,
+			batch.stock_uom,
+			sle.valuation_rate
+		FROM
+	 		`tabStock Ledger Entry` sle
+			left join `tabBatch` batch on batch.name = sle.batch_no
+			right join `tabSerial and Batch Entry` batch_bundle on batch_bundle.parent = sle.serial_and_batch_bundle
+		WHERE
+			sle.is_cancelled = 0
+			and sle.docstatus < 2
+			and ifnull(batch_bundle.batch_no, '') != ''
+			{conditions}
+			and IFNULL(batch.`expiry_date`, '2200-01-01') > '{nowdate()}'
+			and sle.shelf is not null
+			{shelf_type_cond}
+		{group_by}
+		HAVING sum(batch_bundle.qty) != 0
+		ORDER BY
+			sle.item_code,
+			sle.warehouse,
+			batch.creation,
+			sum(batch_bundle.qty)""", as_dict=1)
+
 
 def get_item_warehouse_batch_map(filters, float_precision):
-	sle = get_stock_ledger_entries(filters)
+	sle = get_stock_ledger_entries(filters) + get_stock_from_batch_bundle(filters)
 	iwb_map = {}
 
 	from_date = getdate(filters["from_date"])
