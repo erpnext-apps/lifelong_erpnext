@@ -100,7 +100,7 @@ def get_available_batches(item_code, warehouse, company, qty=0, doctype=None,
 def create_batch(doc, method):
 	non_duplicate_items = {}
 	for row in doc.items:
-		if row.batch_no:
+		if row.batch_no or row.serial_and_batch_bundle:
 			continue
 
 		if row.item_code in non_duplicate_items:
