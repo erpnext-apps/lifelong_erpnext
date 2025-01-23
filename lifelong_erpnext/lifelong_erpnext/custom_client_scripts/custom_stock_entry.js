@@ -34,30 +34,6 @@ frappe.ui.form.on('Stock Entry', {
 })
 
 frappe.ui.form.on('Stock Entry Detail', {
-	item_code(frm, cdt, cdn) {
-		let row = locals[cdt][cdn];
-
-		frappe.flags.hide_serial_batch_dialog = true;
-		if (row.item_code && row.s_warehouse) {
-			frappe.call({
-				method: 'lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils.has_batch_no',
-				args: {
-					item_code: row.item_code
-				},
-				callback: function(r) {
-					if (r.message) {
-						row.has_batch_no = r.message.has_batch_no;
-						row.has_serial_no = r.message.has_serial_no;
-
-						frappe.require("/assets/lifelong_erpnext/js/serial_no_batch_selector.js", function() {
-							erpnext.stock.select_batch_and_serial_no(frm, row);
-						});
-					}
-				}
-			});
-		}
-	},
-
 	edit_batch(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];
 
