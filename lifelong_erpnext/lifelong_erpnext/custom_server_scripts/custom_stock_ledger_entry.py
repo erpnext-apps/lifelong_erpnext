@@ -58,6 +58,9 @@ def update_shelf_data(doc, method):
 			elif is_return:
 				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
 					doc.voucher_detail_no, 'target_shelf')
+		
+		if doc.voucher_type == "Stock Entry" and doc.voucher_detail_no and frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'purpose') == "Material Receipt":
+			doc.shelf = frappe.db.get_value("Stock Entry Detail", doc.voucher_detail_no, "target_shelf")
 
 	if not doc.shelf and doc.is_cancelled == 0:
 		is_shelf_reqd = frappe.get_cached_value("Warehouse", doc.warehouse, "has_shelf")
