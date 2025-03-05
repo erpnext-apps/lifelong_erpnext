@@ -75,7 +75,6 @@ def update_shelf_data(doc, method):
 		validate_shelf_data(doc)
 
 def validate_shelf_data(doc):
-	return
 	shelf_warehouse = frappe.db.get_value('Shelf', doc.shelf, 'warehouse')
 	if (doc.shelf and doc.warehouse and shelf_warehouse != doc.warehouse):
 		frappe.throw(_(f'''The shelf {bold(doc.shelf)} does belong to the warehouse {shelf_warehouse}
