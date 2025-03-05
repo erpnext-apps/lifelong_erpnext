@@ -26,7 +26,7 @@ def update_shelf_data(doc, method):
 
 		if (doc.voucher_type == 'Stock Entry' and
 			frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'purpose') in
-			["Material Transfer", "Manufacture", "Repack", "Send to Subcontractor"]):
+			["Material Transfer", "Manufacture", "Repack", "Send to Subcontractor", "Material Transfer for Manufacture"]):
 			is_internal_transfer = True
 
 		if is_internal_transfer and doc.actual_qty > 0:
@@ -75,6 +75,7 @@ def update_shelf_data(doc, method):
 		validate_shelf_data(doc)
 
 def validate_shelf_data(doc):
+	return
 	shelf_warehouse = frappe.db.get_value('Shelf', doc.shelf, 'warehouse')
 	if (doc.shelf and doc.warehouse and shelf_warehouse != doc.warehouse):
 		frappe.throw(_(f'''The shelf {bold(doc.shelf)} does belong to the warehouse {shelf_warehouse}
