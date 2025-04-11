@@ -85,6 +85,8 @@ def validate_shelf_data(doc):
 
 	if doc.actual_qty > 0:
 		return
+	if frappe.flags.ignore_shelf_wise_validation:
+		return
 	batches = {}
 	if doc.batch_no:
 		batches.setdefault(doc.batch_no, 0)
