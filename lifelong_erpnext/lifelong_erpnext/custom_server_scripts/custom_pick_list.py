@@ -110,6 +110,17 @@ class CustomPickList(PickList):
 								"Cannot create a pick list for Sales Order {0} because it has reserved stock. Please unreserve the stock in order to create a pick list."
 							).format(frappe.bold(so))
 						)
+	def remove_serial_and_batch_bundle(self):
+		for row in self.locations:
+			if row.serial_and_batch_bundle:
+				docstatus = frappe.db.get_value("Serial and Batch Bundle", row.serial_and_batch_bundle, "docstatus")
+				if docstatus == 1:
+					sbb = frappe.get_doc("Serial and Batch Bundle", row.serial_and_batch_bundle)
+					sbb.db_set("voucher_detail_no", None)
+					sbb.db_set("voucher_no", None)
+					sbb.flags.ignore_permissions = True
+					sbb.cancel()
+				sbb.delete(ignore_permissions=True)
 
 def get_available_item_locations(item_code, from_warehouses, required_qty, company, item_doc, ignore_validation=False):
 	locations = []
