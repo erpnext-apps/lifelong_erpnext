@@ -90,38 +90,6 @@ class CustomPickList(PickList):
 		if save:
 			self.save()
 
-	def validate_sales_order(self):
-		"""Raises an exception if the `Sales Order` has reserved stock."""
-		# And Ignore SRE which created via Pick List
-
-		if self.purpose != "Delivery":
-			return
-
-		so_list = set(location.sales_order for location in self.locations if location.sales_order)
-
-		if so_list:
-			for so in so_list:
-				so_doc = frappe.get_doc("Sales Order", so)
-				for item in so_doc.items:
-					frappe.errprint(item)
-					if item.stock_reserved_qty > 0 and not frappe.db.exists("Stock Reservation Entry", {"docstatus": 1, "voucher_type": "Sales Order", "voucher_no": item.parent, "from_voucher_type": "Pick List"}):
-						frappe.throw(
-							_(
-								"Cannot create a pick list for Sales Order {0} because it has reserved stock. Please unreserve the stock in order to create a pick list."
-							).format(frappe.bold(so))
-						)
-	def remove_serial_and_batch_bundle(self):
-		for row in self.locations:
-			if row.serial_and_batch_bundle:
-				docstatus = frappe.db.get_value("Serial and Batch Bundle", row.serial_and_batch_bundle, "docstatus")
-				if docstatus == 1:
-					sbb = frappe.get_doc("Serial and Batch Bundle", row.serial_and_batch_bundle)
-					sbb.db_set("voucher_detail_no", None)
-					sbb.db_set("voucher_no", None)
-					sbb.flags.ignore_permissions = True
-					sbb.cancel()
-				sbb.delete(ignore_permissions=True)
-
 def get_available_item_locations(item_code, from_warehouses, required_qty, company, item_doc, ignore_validation=False):
 	locations = []
 	has_serial_no  = frappe.get_cached_value('Item', item_code, 'has_serial_no')
