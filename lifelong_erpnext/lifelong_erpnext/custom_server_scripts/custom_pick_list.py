@@ -90,6 +90,75 @@ class CustomPickList(PickList):
 		if save:
 			self.save()
 
+	def validate_picked_items(self):
+		for item in self.locations:
+			if self.scan_mode and item.picked_qty < item.stock_qty:
+				frappe.throw(
+					_(
+						"Row {0} picked quantity is less than the required quantity, additional {1} {2} required."
+					).format(item.idx, item.stock_qty - item.picked_qty, item.stock_uom),
+					title=_("Pick List Incomplete"),
+				)
+
+			if not self.scan_mode and item.picked_qty == 0:
+				# if the user has not entered any picked qty, set it to stock_qty, before submit
+				# item.picked_qty = item.stock_qty Don't set picked qty, it will be updated manually
+				pass
+	
+	@frappe.whitelist()
+	def create_stock_reservation_entries(self, notify=True) -> None:
+		"""Creates Stock Reservation Entries for Sales Order Items against Pick List."""
+
+		so_items_details_map = {}
+		for location in self.locations:
+			if location.warehouse and location.sales_order and location.sales_order_item and (flt(location.stock_qty) - flt(location.stock_reserved_qty)) > 0 and location.serial_and_batch_bundle:
+				item_details = {
+					"sales_order_item": location.sales_order_item,
+					"item_code": location.item_code,
+					"warehouse": location.warehouse,
+					"qty_to_reserve": (flt(location.stock_qty) - flt(location.stock_reserved_qty)), # use stock_qty instead of picked_qty
+					"from_voucher_no": location.parent,
+					"from_voucher_detail_no": location.name,
+					"serial_and_batch_bundle": location.serial_and_batch_bundle,
+				}
+				so_items_details_map.setdefault(location.sales_order, []).append(item_details)
+
+		if so_items_details_map:
+			for so, items_details in so_items_details_map.items():
+				print(items_details)
+				so_doc = frappe.get_doc("Sales Order", so)
+				so_doc.create_stock_reservation_entries(
+					items_details=items_details,
+					from_voucher_type="Pick List",
+					notify=notify,
+				)
+	def on_update_after_submit(self) -> None:
+		return # Ignore this method, Pick List will be updated after submit
+		if self.has_reserved_stock():
+			msg = _(
+				"The Pick List having Stock Reservation Entries cannot be updated. If you need to make changes, we recommend canceling the existing Stock Reservation Entries before updating the Pick List."
+			)
+			frappe.throw(msg)
+
+	def validate_sales_order(self):
+		"""Raises an exception if the `Sales Order` has reserved stock."""
+		return # Validation not required
+		if self.purpose != "Delivery":
+			return
+
+		so_list = set(location.sales_order for location in self.locations if location.sales_order)
+
+		if so_list:
+			for so in so_list:
+				so_doc = frappe.get_doc("Sales Order", so)
+				for item in so_doc.items:
+					if item.stock_reserved_qty > 0:
+						frappe.throw(
+							_(
+								"Cannot create a pick list for Sales Order {0} because it has reserved stock. Please unreserve the stock in order to create a pick list."
+							).format(frappe.bold(so))
+						)
+
 def get_available_item_locations(item_code, from_warehouses, required_qty, company, item_doc, ignore_validation=False):
 	locations = []
 	has_serial_no  = frappe.get_cached_value('Item', item_code, 'has_serial_no')
