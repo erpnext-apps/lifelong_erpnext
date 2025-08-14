@@ -140,6 +140,25 @@ class CustomPickList(PickList):
 			)
 			frappe.throw(msg)
 
+	def validate_sales_order(self):
+		"""Raises an exception if the `Sales Order` has reserved stock."""
+		return # Validation not required
+		if self.purpose != "Delivery":
+			return
+
+		so_list = set(location.sales_order for location in self.locations if location.sales_order)
+
+		if so_list:
+			for so in so_list:
+				so_doc = frappe.get_doc("Sales Order", so)
+				for item in so_doc.items:
+					if item.stock_reserved_qty > 0:
+						frappe.throw(
+							_(
+								"Cannot create a pick list for Sales Order {0} because it has reserved stock. Please unreserve the stock in order to create a pick list."
+							).format(frappe.bold(so))
+						)
+
 def get_available_item_locations(item_code, from_warehouses, required_qty, company, item_doc, ignore_validation=False):
 	locations = []
 	has_serial_no  = frappe.get_cached_value('Item', item_code, 'has_serial_no')
