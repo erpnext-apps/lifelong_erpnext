@@ -111,7 +111,7 @@ class CustomStockEntry(StockEntry):
 						if not d.s_warehouse:
 							frappe.throw(_("Source warehouse is mandatory for row {0}").format(d.idx))
 
-			if cstr(d.s_warehouse) == cstr(d.t_warehouse) and d.shelf == d.target_shelf:
+			if cstr(d.s_warehouse) == cstr(d.t_warehouse) and d.shelf == d.target_shelf and not self.get("custom_pick_list"):
 				frappe.throw(_("Source and target shelf cannot be same for row {0}").format(d.idx))
 
 			if not (d.s_warehouse or d.t_warehouse):
