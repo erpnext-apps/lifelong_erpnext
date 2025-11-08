@@ -159,6 +159,13 @@ class CustomStockEntry(StockEntry):
 					message = self.prepare_over_receipt_message(rule, values)
 					frappe.throw(msg=message, title=_("Over Receipt"))
 
+	def validate_same_source_target_warehouse_during_material_transfer(self):
+		# This validation conflicting with our customizations
+		if self.get("custom_pick_list"):
+			return
+		else:
+			return super().validate_same_source_target_warehouse_during_material_transfer()
+
 
 @frappe.whitelist()
 def get_available_putaway_capacity(rule, posting_date=None, posting_time=None):
