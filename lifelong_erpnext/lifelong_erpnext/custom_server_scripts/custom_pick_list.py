@@ -111,12 +111,12 @@ class CustomPickList(PickList):
 
 		so_items_details_map = {}
 		for location in self.locations:
-			if location.warehouse and location.sales_order and location.sales_order_item and (flt(location.stock_qty) - flt(location.stock_reserved_qty)) > 0 and location.serial_and_batch_bundle:
+			if location.warehouse and location.sales_order and location.sales_order_item and (flt(location.stock_qty) - flt(location.stock_reserved_qty) - flt(location.custom_transfered_qty)) > 0 and location.serial_and_batch_bundle:
 				item_details = {
 					"sales_order_item": location.sales_order_item,
 					"item_code": location.item_code,
 					"warehouse": location.warehouse,
-					"qty_to_reserve": (flt(location.stock_qty) - flt(location.stock_reserved_qty)), # use stock_qty instead of picked_qty
+					"qty_to_reserve": (flt(location.stock_qty) - flt(location.stock_reserved_qty) - flt(location.custom_transfered_qty)), # use stock_qty instead of picked_qty
 					"from_voucher_no": location.parent,
 					"from_voucher_detail_no": location.name,
 					"serial_and_batch_bundle": location.serial_and_batch_bundle,
@@ -125,7 +125,6 @@ class CustomPickList(PickList):
 
 		if so_items_details_map:
 			for so, items_details in so_items_details_map.items():
-				print(items_details)
 				so_doc = frappe.get_doc("Sales Order", so)
 				so_doc.create_stock_reservation_entries(
 					items_details=items_details,
