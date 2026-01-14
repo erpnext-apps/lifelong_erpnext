@@ -124,13 +124,16 @@ class CustomPickList(PickList):
 				so_items_details_map.setdefault(location.sales_order, []).append(item_details)
 
 		if so_items_details_map:
+			from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_reservation_entry import create_stock_reservation_entries_for_so_items
 			for so, items_details in so_items_details_map.items():
 				so_doc = frappe.get_doc("Sales Order", so)
-				so_doc.create_stock_reservation_entries(
+				create_stock_reservation_entries_for_so_items(
+					so_doc,
 					items_details=items_details,
 					from_voucher_type="Pick List",
 					notify=notify,
 				)
+				
 	def on_update_after_submit(self) -> None:
 		return # Ignore this method, Pick List will be updated after submit
 		if self.has_reserved_stock():
