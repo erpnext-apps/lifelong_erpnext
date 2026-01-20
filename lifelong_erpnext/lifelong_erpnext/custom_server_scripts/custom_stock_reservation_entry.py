@@ -55,7 +55,7 @@ def create_stock_reservation_entries_for_so_items(
 		sre.voucher_type = sales_order.doctype
 		sre.voucher_no = sales_order.name
 		sre.voucher_detail_no = item.name
-		sre.available_qty = item.qty_to_reserve
+		sre.reserved_qty = item.qty_to_reserve
 		sre.voucher_qty = item.stock_qty
 		sre.company = sales_order.company
 		sre.stock_uom = item.stock_uom
