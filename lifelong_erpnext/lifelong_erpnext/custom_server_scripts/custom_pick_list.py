@@ -127,12 +127,19 @@ class CustomPickList(PickList):
 			from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_reservation_entry import create_stock_reservation_entries_for_so_items
 			for so, items_details in so_items_details_map.items():
 				so_doc = frappe.get_doc("Sales Order", so)
-				create_stock_reservation_entries_for_so_items(
-					so_doc,
-					items_details=items_details,
-					from_voucher_type="Pick List",
-					notify=notify,
-				)
+				if frappe.db.get_single_value("Stock Settings", "custom_reservation_type") == "Standard":
+					so_doc.create_stock_reservation_entries(
+						items_details=items_details,
+						from_voucher_type="Pick List",
+						notify=notify,
+					)
+				else:
+					create_stock_reservation_entries_for_so_items(
+						so_doc,
+						items_details=items_details,
+						from_voucher_type="Pick List",
+						notify=notify,
+					)
 				
 	def on_update_after_submit(self) -> None:
 		return # Ignore this method, Pick List will be updated after submit
