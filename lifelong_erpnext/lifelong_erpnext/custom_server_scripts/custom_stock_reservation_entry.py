@@ -34,8 +34,14 @@ def create_stock_reservation_entries_for_so_items(
 			items.append(so_item)
 
 	items_to_loop = items if items_details else sales_order.get("items")
-
 	for item in items_to_loop:
+		if not item.qty_to_reserve:
+			continue
+		if item.from_voucher_no:
+			reserved_qty = sum(frappe.db.get_all("Stock Reserve Entry", filters={"from_voucher_type": "Pick List", "from_voucher_no": item.from_voucher_no, "from_voucher_detail_no": item.from_voucher_detail_no, "docstatus": 1}, pluck="reserved_qty"))
+			if reserved_qty >= frappe.get_cached_value("Pick List Item", item.from_voucher_detail_no, "stock_qty"):
+				frappe.db.set_value("Pick List Item", item.from_voucher_detail_no, "stock_reserved_qty", reserved_qty)
+				continue
 		is_stock_item, has_serial_no, has_batch_no = frappe.get_cached_value(
 			"Item", item.item_code, ["is_stock_item", "has_serial_no", "has_batch_no"]
 		)
@@ -82,6 +88,8 @@ def create_stock_reservation_entries_for_so_items(
 						"batch_no": entry.batch_no,
 						"qty": qty,
 						"warehouse": entry.warehouse,
+						"material_state": entry.material_state,
+						"shelf": entry.shelf
 					},
 				)
 
@@ -91,7 +99,6 @@ def create_stock_reservation_entries_for_so_items(
 		sre.save()
 		sre.submit()
 
-		sre_count += 1
 
-	if sre_count and notify:
+	if notify:
 		frappe.msgprint(_("Stock Reservation Entries Created"), alert=True, indicator="green")
