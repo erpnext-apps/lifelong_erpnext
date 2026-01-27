@@ -125,9 +125,10 @@ class CustomPickList(PickList):
 
 		if so_items_details_map:
 			from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_stock_reservation_entry import create_stock_reservation_entries_for_so_items
+			reservation_type = frappe.get_cached_value("Stock Settings", "Stock Settings", "custom_reservation_type")
 			for so, items_details in so_items_details_map.items():
 				so_doc = frappe.get_doc("Sales Order", so)
-				if frappe.db.get_single_value("Stock Settings", "custom_reservation_type") == "Standard":
+				if reservation_type == "Standard":
 					so_doc.create_stock_reservation_entries(
 						items_details=items_details,
 						from_voucher_type="Pick List",
