@@ -15,21 +15,21 @@ from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils import
 class CustomPutawayRule(PutawayRule):
 	def validate_duplicate_rule(self):
 		existing_rule = frappe.db.exists("Putaway Rule",
-			{"item_code": self.item_code, "warehouse": self.warehouse, "shelf": self.shelf})
+			{"item_code": self.item_code, "warehouse": self.warehouse})
 
 		if existing_rule and existing_rule != self.name:
 			frappe.throw(_("Putaway Rule already exists for Item {0} in Warehouse {1}.")
 				.format(frappe.bold(self.item_code), frappe.bold(self.warehouse)),
 				title=_("Duplicate"))
 
-		self.validate_shelf()
+		# self.validate_shelf()
 
 	def validate_capacity(self):
 		stock_uom = frappe.db.get_value("Item", self.item_code, "stock_uom")
 		balance_qty = get_stock_balance({
 			'item_code': self.item_code,
 			'warehouse': self.warehouse,
-			'shelf': self.shelf,
+			# 'shelf': self.shelf,
 			'posting_date': nowdate(),
 			'posting_time': nowtime()
 		}, "<=", "desc", "limit 1")
@@ -42,10 +42,10 @@ class CustomPutawayRule(PutawayRule):
 		if not self.capacity:
 			frappe.throw(_("Capacity must be greater than 0"), title=_("Invalid"))
 
-	def validate_shelf(self):
-		if (self.warehouse and not self.shelf and
-			frappe.get_cached_value('Warehouse', self.warehouse, 'has_shelf')):
-			frappe.throw(f"The shelf is required for the warehouse {self.warehouse}")
+	# def validate_shelf(self):
+	# 	if (self.warehouse and not self.shelf and
+	# 		frappe.get_cached_value('Warehouse', self.warehouse, 'has_shelf')):
+	# 		frappe.throw(f"The shelf is required for the warehouse {self.warehouse}")
 
 @frappe.whitelist()
 def apply_putaway_rule(doctype, items, company, sync=None, purpose=None):
@@ -110,7 +110,7 @@ def apply_putaway_rule(doctype, items, company, sync=None, purpose=None):
 				if not qty_to_allocate: break
 
 				updated_table = add_row(item, qty_to_allocate, rule.warehouse, updated_table,
-					rule.name, serial_nos=serial_nos, shelf=rule.shelf)
+					rule.name, serial_nos=serial_nos)
 
 				pending_stock_qty -= stock_qty_to_allocate
 				pending_qty -= qty_to_allocate
@@ -143,12 +143,12 @@ def _items_changed(old, new, doctype: str) -> bool:
 	old = [frappe._dict(item) if isinstance(item, dict) else item for item in old]
 
 	if doctype == "Stock Entry":
-		compare_keys = ("item_code", "t_warehouse", "transfer_qty", "serial_no", "shelf")
+		compare_keys = ("item_code", "t_warehouse", "transfer_qty", "serial_no")
 		sort_key = lambda item: (item.item_code, cstr(item.t_warehouse),  # noqa
 				flt(item.transfer_qty), cstr(item.serial_no))
 	else:
 		# purchase receipt / invoice
-		compare_keys = ("item_code", "warehouse", "stock_qty", "received_qty", "serial_no", "shelf")
+		compare_keys = ("item_code", "warehouse", "stock_qty", "received_qty", "serial_no")
 		sort_key = lambda item: (item.item_code, cstr(item.warehouse),  # noqa
 				flt(item.stock_qty), flt(item.received_qty), cstr(item.serial_no))
 
@@ -174,7 +174,7 @@ def get_ordered_putaway_rules(item_code, company, source_warehouse=None):
 		filters.update({"warehouse": ["!=", source_warehouse]})
 
 	rules = frappe.get_all("Putaway Rule",
-		fields=["name", "item_code", "stock_capacity", "priority", "warehouse", "shelf"],
+		fields=["name", "item_code", "stock_capacity", "priority", "warehouse"],
 		filters=filters,
 		order_by="priority asc, capacity desc")
 
@@ -186,7 +186,7 @@ def get_ordered_putaway_rules(item_code, company, source_warehouse=None):
 		balance_qty = get_stock_balance({
 			'item_code': rule.item_code,
 			'warehouse': rule.warehouse,
-			'shelf': rule.shelf,
+			# 'shelf': rule.shelf,
 			'posting_date': nowdate(),
 			'posting_time': nowtime()
 		}, "<=", "desc", "limit 1")
