@@ -4,13 +4,14 @@
 import frappe
 from frappe import _, bold
 from frappe.model.document import Document
+from .utils import validate_rack_zone_warehouse
 
 class Shelf(Document):
 	def validate(self):
 		self.validate_unique_shelf()
 		if not self.is_new():
 			self.check_stock_exsts()
-
+		validate_rack_zone_warehouse(self)
 	def check_stock_exsts(self):
 		warehouse = frappe.db.get_value('Shelf', self.name, 'warehouse')
 
