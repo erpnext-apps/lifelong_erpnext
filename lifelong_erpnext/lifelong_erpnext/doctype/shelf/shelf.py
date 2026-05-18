@@ -4,6 +4,7 @@
 import frappe
 from frappe import _, bold
 from frappe.model.document import Document
+from .utils import validate_rack_zone_warehouse
 
 class Shelf(Document):
 	def validate(self):
