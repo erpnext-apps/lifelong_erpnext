@@ -1,95 +1,99 @@
 {
-    "actions": [],
-    "allow_rename": 1,
-    "creation": "2022-03-15 17:56:37.614070",
-    "doctype": "DocType",
-    "editable_grid": 1,
-    "engine": "InnoDB",
-    "field_order": [
-        "shelf_name",
-        "warehouse",
-        "level",
-        "zone",
-        "rack",
-        "length",
-        "breadth",
-        "height"
-    ],
-    "fields": [
-        {
-            "fieldname": "shelf_name",
-            "fieldtype": "Data",
-            "in_list_view": 1,
-            "label": "Shelf Name",
-            "reqd": 1
-        },
-        {
-            "fieldname": "warehouse",
-            "fieldtype": "Link",
-            "in_list_view": 1,
-            "label": "Warehouse",
-            "options": "Warehouse",
-            "reqd": 1
-        },
-        {
-            "fieldname": "level",
-            "fieldtype": "Int",
-            "label": "Level"
-        },
-        {
-            "fieldname": "zone",
-            "fieldtype": "Link",
-            "label": "Zone",
-            "options": "Zone"
-        },
-        {
-            "fieldname": "rack",
-            "fieldtype": "Link",
-            "label": "Rack",
-            "options": "Rack"
-        },
-        {
-            "fieldname": "length",
-            "fieldtype": "Float",
-            "label": "Length"
-        },
-        {
-            "fieldname": "breadth",
-            "fieldtype": "Float",
-            "label": "Breadth"
-        },
-        {
-            "fieldname": "height",
-            "fieldtype": "Float",
-            "label": "Height"
-        }
-    ],
-    "grid_page_length": 50,
-    "index_web_pages_for_search": 1,
-    "links": [],
-    "modified": "2026-04-17 17:09:00.836431",
-    "modified_by": "Administrator",
-    "module": "Lifelong ERPNext",
-    "name": "Shelf",
-    "naming_rule": "By script",
-    "owner": "Administrator",
-    "permissions": [
-        {
-            "create": 1,
-            "delete": 1,
-            "email": 1,
-            "export": 1,
-            "print": 1,
-            "read": 1,
-            "report": 1,
-            "role": "System Manager",
-            "share": 1,
-            "write": 1
-        }
-    ],
-    "row_format": "Dynamic",
-    "rows_threshold_for_grid_search": 20,
-    "sort_field": "modified",
-    "sort_order": "DESC",
-    "states": []
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2022-03-15 17:56:37.614070",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "shelf_name",
+  "warehouse",
+  "is_yard",
+  "level",
+  "length1",
+  "breadth",
+  "height",
+  "cycle_count_completed",
+  "cycle_count_completed_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "shelf_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Shelf Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "level",
+   "fieldtype": "Int",
+   "label": "Level"
+  },
+  {
+   "fieldname": "breadth",
+   "fieldtype": "Float",
+   "label": "Breadth"
+  },
+  {
+   "fieldname": "height",
+   "fieldtype": "Float",
+   "label": "Height"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_yard",
+   "fieldtype": "Check",
+   "label": "Is Yard"
+  },
+  {
+   "fieldname": "length1",
+   "fieldtype": "Float",
+   "label": "Length"
+  },
+  {
+   "default": "0",
+   "fieldname": "cycle_count_completed",
+   "fieldtype": "Check"
+  },
+  {
+   "fieldname": "cycle_count_completed_on",
+   "fieldtype": "Datetime"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-21 12:51:22.838769",
+ "modified_by": "Administrator",
+ "module": "Lifelong ERPNext",
+ "name": "Shelf",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
 }
