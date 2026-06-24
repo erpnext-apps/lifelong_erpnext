@@ -34,7 +34,7 @@ class Shelf(Document):
 			frappe.throw(f"Zone is required")
 
 		# FINAL CLEAN NAME
-		self.name = f"{self.shelf_name}_{self.rack}_{self.Zone}" 
+		self.name = f"{self.shelf_name}_{self.rack}_{self.zone}" 
 
 	
 
