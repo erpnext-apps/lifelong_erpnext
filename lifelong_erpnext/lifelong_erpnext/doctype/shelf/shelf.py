@@ -31,17 +31,11 @@ class Shelf(Document):
 		if not self.rack:
 			frappe.throw("Rack is required")
 
-		# Validate rack has zone (data integrity check)
-		zone = frappe.get_cached_value("Rack", self.rack, "zone")
-
-		if not zone:
-			frappe.throw(f"Zone not set in Rack {self.rack}")
-
-		if not self.warehouse:
-			frappe.throw("Warehouse is required")
+		if not self.zone:
+			frappe.throw(f"Zone is required")
 
 		# FINAL CLEAN NAME
-		self.name = f"{self.shelf_name}-{self.rack}"
+		self.name = f"{self.shelf_name}_{self.rack}_{self.Zone}" 
 
 	
 
