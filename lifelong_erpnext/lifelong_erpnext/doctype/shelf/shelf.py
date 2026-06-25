@@ -24,18 +24,24 @@ class Shelf(Document):
 				frappe.throw(_(f'The stock ledgers exists against the warehouse {bold(warehouse)}'))
 	
 	def autoname(self):
+			if not self.shelf_name:
+				frappe.throw("Shelf Name is required")
 
-		if not self.shelf_name:
-			frappe.throw("Shelf Name is required")
+			if not self.rack:
+				frappe.throw("Rack is required")
 
-		if not self.rack:
-			frappe.throw("Rack is required")
+			if not self.zone:
+				frappe.throw("Zone is required")
 
-		if not self.zone:
-			frappe.throw(f"Zone is required")
+			clean_rack = frappe.db.get_value("Rack", self.rack, "rack_name")
+			clean_zone = frappe.db.get_value("Zone", self.zone, "zone_name")
+			clean_shelf = self.shelf_name
 
-		# FINAL CLEAN NAME
-		self.name = f"{self.shelf_name}_{self.rack}_{self.zone}" 
+			if not clean_rack or not clean_zone:
+				frappe.throw("Could not retrieve names for Rack or Zone from the database.")
+
+			# FINAL CLEAN NAME: shelf_name_rack_name_zone_name
+			self.name = f"{clean_shelf}_{clean_rack}_{clean_zone}"
 
 	
 
