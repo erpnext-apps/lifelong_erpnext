@@ -22,7 +22,7 @@ class Shelf(Document):
 			if sle_exists:
 				frappe.throw(_(f'The stock ledgers exists against the warehouse {bold(warehouse)}'))
 	
-
+	@staticmethod
 	def get_short_code(value):
 		import re
 		"""
