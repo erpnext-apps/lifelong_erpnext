@@ -36,17 +36,28 @@ def update_shelf_data(doc, method):
 			doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
 				doc.voucher_detail_no, 'shelf')
 
-		if (doc.voucher_type == 'Purchase Receipt' and doc.actual_qty < 0):
+		if doc.voucher_type == 'Purchase Receipt':
 			voucher_data = frappe.db.get_value(doc.voucher_type,
 				doc.voucher_no, ["is_internal_supplier", "is_return"], as_dict=1)
-
-			if voucher_data.is_internal_supplier:
-				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
-					doc.voucher_detail_no, 'from_shelf')
-			elif voucher_data.is_return:
-				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
-					doc.voucher_detail_no, 'shelf')
-
+			if doc.actual_qty < 0:
+				if voucher_data.is_internal_supplier:
+					if voucher_data.is_return:
+						doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+							doc.voucher_detail_no, 'shelf')
+					else:
+						doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+							doc.voucher_detail_no, 'from_shelf')
+				elif voucher_data.is_return:
+					doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+						doc.voucher_detail_no, 'shelf')
+			elif doc.actual_qty > 0:
+				if voucher_data.is_internal_supplier:
+					if voucher_data.is_return:
+						doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+							doc.voucher_detail_no, 'from_shelf')
+					else:
+						doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
+							doc.voucher_detail_no, 'shelf')
 		if (doc.voucher_type in ["Delivery Note", "Sales Invoice"]
 			and is_internal_transfer):
 			is_return = frappe.db.get_value(doc.voucher_type,
@@ -58,7 +69,6 @@ def update_shelf_data(doc, method):
 			elif is_return:
 				doc.shelf = frappe.db.get_value(doctype_mapper.get(doc.voucher_type),
 					doc.voucher_detail_no, 'target_shelf')
-		
 		if doc.voucher_type == "Stock Entry" and doc.voucher_detail_no and frappe.db.get_value(doc.voucher_type, doc.voucher_no, 'purpose') == "Material Receipt":
 			doc.shelf = frappe.db.get_value("Stock Entry Detail", doc.voucher_detail_no, "target_shelf")
 
