@@ -22,8 +22,26 @@ class Shelf(Document):
 			if sle_exists:
 				frappe.throw(_(f'The stock ledgers exists against the warehouse {bold(warehouse)}'))
 	
-	def autoname(self):
+	@staticmethod
+	def get_short_code(value):
+		import re
+		"""
+		Converts 'Rack 1' -> 'R1', 'Zone 1' -> 'Z1'.
+		Falls back to the original value if it doesn't match the '<Word> <Number>' pattern.
+		"""
+		if not value:
+			return value
 
+		match = re.match(r"^([A-Za-z]+)\s*(\d+)$", value.strip())
+		if match:
+			letter = match.group(1)[0].upper()
+			number = match.group(2)
+			return f"{letter}{number}"
+
+		return value
+
+
+	def autoname(self):
 		if not self.shelf_name:
 			frappe.throw("Shelf Name is required")
 
@@ -31,10 +49,22 @@ class Shelf(Document):
 			frappe.throw("Rack is required")
 
 		if not self.zone:
-			frappe.throw(f"Zone is required")
+			frappe.throw("Zone is required")
 
-		# FINAL CLEAN NAME
-		self.name = f"{self.shelf_name}_{self.rack}_{self.zone}" 
+		clean_rack = frappe.db.get_value("Rack", self.rack, "rack_name")
+		clean_zone = frappe.db.get_value("Zone", self.zone, "zone_name")
+		clean_shelf = self.shelf_name
+
+		if not clean_rack or not clean_zone:
+			frappe.throw("Could not retrieve names for Rack or Zone from the database.")
+
+		short_rack = self.get_short_code(clean_rack)
+		short_zone = self.get_short_code(clean_zone)
+
+		# FINAL CLEAN NAME: shelf_name_R#_Z#
+		self.name = f"{clean_shelf}_{short_rack}_{short_zone}"
+
+	
 
 	
 
