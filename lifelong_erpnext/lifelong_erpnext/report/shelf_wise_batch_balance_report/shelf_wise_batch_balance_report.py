@@ -39,7 +39,10 @@ def get_available_shelf_batches(filters, float_precision=None):
 
 	iwb_map = get_item_warehouse_batch_map(filters, float_precision)
 
-	shelf_type = get_shelf_type()
+	# Only the shelves that appear in these rows, not the whole Shelf table (see
+	# get_shelf_types_for): a single-item call needs a handful of shelves out of
+	# ~12k on lifelong-staging.
+	shelf_type = get_shelf_types_for(row.shelf for row in iwb_map.values())
 	for key, row in iwb_map.items():
 		if row.shelf:
 			row.shelf_type = shelf_type.get(row.shelf)
@@ -60,6 +63,29 @@ def get_available_shelf_batches(filters, float_precision=None):
 		frappe.local.available_shelf_data.setdefault(key, data)
 
 	return data
+
+def get_shelf_types_for(shelf_names):
+	"""Shelf name -> type for just these shelves, cached per request on frappe.local.
+
+	Each shelf is looked up by primary key the first time it is needed in a request;
+	names that don't exist map to None, the same as a missing key in get_shelf_type().
+	"""
+	if not hasattr(frappe.local, "shelf_type_by_name"):
+		frappe.local.shelf_type_by_name = {}
+
+	cache = frappe.local.shelf_type_by_name
+	missing = {name for name in shelf_names if name and name not in cache}
+	if missing:
+		found = dict(
+			frappe.db.sql(
+				"SELECT `name`, `type` FROM `tabShelf` WHERE `name` IN %s", (tuple(missing),)
+			)
+		)
+		for name in missing:
+			cache[name] = found.get(name)
+
+	return cache
+
 
 def get_shelf_type():
 	if not hasattr(frappe.local, "shelf_type"):
