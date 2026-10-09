@@ -1,6 +1,9 @@
 import frappe
 from frappe import _, bold
-from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils import get_available_batches
+from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils import (
+	get_available_batches,
+	get_request_cached_value,
+)
 
 def update_shelf_data(doc, method):
 	doctype_mapper = {
@@ -85,7 +88,7 @@ def update_shelf_data(doc, method):
 		validate_shelf_data(doc)
 
 def validate_shelf_data(doc):
-	shelf_warehouse = frappe.db.get_value('Shelf', doc.shelf, 'warehouse')
+	shelf_warehouse = get_request_cached_value('Shelf', doc.shelf, 'warehouse')
 	if (doc.shelf and doc.warehouse and shelf_warehouse != doc.warehouse):
 		frappe.throw(_(f'''The shelf {bold(doc.shelf)} does belong to the warehouse {shelf_warehouse}
 			and does not belong to the warehouse {bold(doc.warehouse)}'''))
