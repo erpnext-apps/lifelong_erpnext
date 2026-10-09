@@ -2,6 +2,24 @@ import frappe
 from frappe.utils import nowdate, flt
 from lifelong_erpnext.lifelong_erpnext.report.shelf_wise_batch_balance_report.shelf_wise_batch_balance_report import get_available_shelf_batches
 
+def get_request_cached_value(doctype, name, fieldname):
+	"""frappe.db.get_value() for a single scalar field, memoized for the rest of this
+	request only. Not frappe.get_cached_value()/get_cached_doc() -- scoped to
+	frappe.local instead so there is no cross-request staleness window.
+
+	Meant for small, rarely-written reference values (e.g. Shelf.warehouse) that get
+	looked up with the same name repeatedly in one request, such as one Stock Ledger
+	Entry.validate() per row of a bulk putaway all referencing the same shelf.
+	"""
+	cache = getattr(frappe.local, "_request_cached_value", None)
+	if cache is None:
+		cache = {}
+		frappe.local._request_cached_value = cache
+	key = (doctype, name, fieldname)
+	if key not in cache:
+		cache[key] = frappe.db.get_value(doctype, name, fieldname)
+	return cache[key]
+
 def get_stock_balance(args, operator=None,
 	order="desc", limit=None, for_update=False, debug=False, check_serial_no=True):
 	"""get stock ledger entries filtered by specific posting datetime conditions"""
