@@ -7,6 +7,10 @@ from erpnext.stock.doctype.pick_list.pick_list import (PickList,
 	get_available_item_locations_for_serial_and_batched_item, get_available_item_locations_for_serialized_item,
 	get_available_item_locations_for_other_item)
 
+from erpnext.stock.serial_batch_bundle import (
+	SerialBatchCreation
+)
+
 from lifelong_erpnext.lifelong_erpnext.custom_server_scripts.custom_utils import get_available_batches
 
 class CustomPickList(PickList):
@@ -168,6 +172,37 @@ class CustomPickList(PickList):
 								"Cannot create a pick list for Sales Order {0} because it has reserved stock. Please unreserve the stock in order to create a pick list."
 							).format(frappe.bold(so))
 						)
+
+	def make_bundle_using_old_serial_batch_fields(self):
+		# Overrided this method to Use stock_qty instead of picked qty
+		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
+
+		for row in self.locations:
+			if not row.serial_no and not row.batch_no:
+				continue
+
+			if not row.use_serial_batch_fields and (row.serial_no or row.batch_no):
+				frappe.throw(_("Please enable Use Old Serial / Batch Fields to make_bundle"))
+
+			if row.use_serial_batch_fields and (not row.serial_and_batch_bundle):
+				sn_doc = SerialBatchCreation(
+					{
+						"item_code": row.item_code,
+						"warehouse": row.warehouse,
+						"voucher_type": self.doctype,
+						"voucher_no": self.name,
+						"voucher_detail_no": row.name,
+						"qty": row.stock_qty,
+						"type_of_transaction": "Outward",
+						"company": self.company,
+						"serial_nos": get_serial_nos(row.serial_no) if row.serial_no else None,
+						"batches": frappe._dict({row.batch_no: row.stock_qty}) if row.batch_no else None,
+						"batch_no": row.batch_no,
+					}
+				).make_serial_and_batch_bundle()
+
+				row.serial_and_batch_bundle = sn_doc.name
+				row.db_set("serial_and_batch_bundle", sn_doc.name)
 
 def get_available_item_locations(item_code, from_warehouses, required_qty, company, item_doc, ignore_validation=False):
 	locations = []
